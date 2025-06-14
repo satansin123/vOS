@@ -1,0 +1,309 @@
+# =================================
+# C++ Build Artifacts
+# =================================
+
+# Build directories
+build/
+build_*/
+build-*/
+out/
+debug/
+release/
+x64/
+x86/
+Debug/
+Release/
+RelWithDebInfo/
+MinSizeRel/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Testing/
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps/
+.cmake/
+
+# Ninja build files
+.ninja_deps
+.ninja_log
+build.ninja
+rules.ninja
+
+# =================================
+# vcpkg Package Manager
+# =================================
+
+# vcpkg installed packages
+vcpkg_installed/
+.vcpkg-root
+
+# vcpkg manifest mode
+vcpkg-manifest-install.log
+
+# =================================
+# Visual Studio / MSBuild
+# =================================
+
+# Visual Studio temporary files
+*.tmp
+*.tmp_proj
+*_wpftmp.csproj
+*.log
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+
+# Visual Studio cache/options
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio Code cache
+.vscode/settings.json
+.vscode/c_cpp_properties.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# ReSharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# =================================
+# Docker
+# =================================
+
+# Docker volumes and data
+.docker/
+docker-compose.override.yml
+
+# =================================
+# Executables and Libraries
+# =================================
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Libraries
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exp
+*.pdb
+*.ilk
+
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+*.slo
+*.lo
+
+# Precompiled headers
+*.gch
+*.pch
+
+# =================================
+# Development Tools
+# =================================
+
+# Clang
+.clangd/
+.cache/
+compile_flags.txt
+
+# Qt
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+*.moc
+*.qm
+*.prl
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+Makefile*
+*build-*
+
+# CodeBlocks
+*.layout
+*.cbp
+
+# Dev-C++
+*.dev
+
+# =================================
+# Operating System Files
+# =================================
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# =================================
+# Environment and Configuration
+# =================================
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Configuration files
+config.local.*
+*.local.json
+*.local.yaml
+*.local.yml
+
+# =================================
+# Logs and Temporary Files
+# =================================
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage and testing
+coverage/
+*.gcov
+*.gcda
+*.gcno
+lcov.info
+
+# =================================
+# Package Managers
+# =================================
+
+# Conan
+conanfile.txt.user
+conandata.yml.user
+conanbuildinfo.*
+conaninfo.txt
+
+# Hunter
+_3rdParty/
+
+# =================================
+# Archive and Compressed Files
+# =================================
+
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# =================================
+# IDE and Editor Files
+# =================================
+
+# JetBrains IDEs
+.idea/
+*.swp
+*.swo
+*~
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# =================================
+# Custom Project Files
+# =================================
+
+# Custom build scripts output
+scripts/output/
+scripts/logs/
+
+# Documentation build
+docs/_build/
+docs/html/
+docs/latex/
+
+# Benchmark results
+benchmarks/results/

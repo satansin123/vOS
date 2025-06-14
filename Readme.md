@@ -1,212 +1,415 @@
-# 🛠️ Professional C++ Project Template
+Based on the search results and your project structure[1], here's a comprehensive README file for your C++ template:
 
-![C++](https://img.shields.io/badge/C%2B%2B-17-blue.svg?style=flat&ake-3.15+-green.svg?style-Ready-blue.svg?style=flat&logo=dockerio/badge/VS%20Code-Configured-blue.svg?style=flat&logo=visual, containerized C++ development environment with CMake, Ninja, vcpkg, and full VS Code integration\*
+# 🚀 vOS - Universal C++ Project Template
 
-[Getting Started](#-getting-started) -
-[Commands](#-the-3-essential-commands) -
-[Features](#-features) -
-[Dependencies](#-managing-dependencies) -
-[Contributing](#-contributing)
+A powerful, cross-platform C++ project template that seamlessly supports both Windows local development and Docker containerized environments. Built for maximum flexibility with dynamic path detection and zero-configuration setup.
 
----
+![Language](https://img.shields.io/badge](https://img.shields.io/badge](https://img.shields.io/badge
 
-## 🚀 Getting Started
+- 🔧 **Dynamic Configuration** - Automatically detects project name and root paths
+- 🪟 **Windows Native Support** - Complete Visual Studio 2022 integration with batch scripts
+- 🐳 **Docker Ready** - Full containerized development environment
+- 🎯 **VS Code Integration** - Complete IDE setup with debugging and tasks
+- 📦 **vcpkg Package Management** - Modern C++ dependencies with features
+- 🏗️ **CMake + Ninja** - Fast, reliable cross-platform build system
+- 🔄 **Multi-Platform** - Works on Windows 11, Linux, macOS
+- ⚡ **Zero Configuration** - Copy and use as template immediately
+- 🛠️ **Multiple Build Modes** - Release, Debug, and custom configurations
 
-### Prerequisites
+## 📁 Project Structure
 
-- [Docker](https://www.docker.com/get-started)
-- [Visual Studio Code](https://code.visualstudio.com/)
-- VS Code Extensions:
-  - **Dev Containers** (`ms-vscode-remote.remote-containers`)
-  - **C/C++** (`ms-vscode.cpptools`)
-  - **CMake Tools** (`ms-vscode.cmake-tools`)
-
-### Quick Setup
-
-1. **Clone this template:**
-
-   ```bash
-   git clone https://github.com/yourusername/cpp-project-template.git
-   cd cpp-project-template
-   ```
-
-2. **Open in VS Code:**
-
-   ```bash
-   code .
-   ```
-
-3. **Reopen in Container:**
-
-   - Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac)
-   - Type: `Dev Containers: Reopen in Container`
-   - Wait for the container to build (first time only)
-
-4. **You're ready to code!** 🎉
-
----
-
-## ⚡ The 3 Essential Commands
-
-| Action       | VS Code Shortcut                           | Description                            |
-| ------------ | ------------------------------------------ | -------------------------------------- |
-| **🔨 Build** | `Ctrl+Shift+B` → `Build`                   | Compiles your entire project           |
-| **▶️ Run**   | `Ctrl+Shift+P` → `Tasks: Run Task` → `Run` | Executes your application              |
-| **🐛 Debug** | `F5`                                       | Launches GDB debugger with breakpoints |
-
-### Alternative: Command Line
-
-```bash
-# Inside the dev container
-cmake --build build          # Build
-./build/main                 # Run
-gdb ./build/main            # Debug
+```
+vOS/
+├── 📁 .devcontainer/          # VS Code dev container config
+│   └── devcontainer.json
+├── 📁 .vscode/                # VS Code workspace settings  
+│   ├── launch.json            # Debug configurations
+│   └── tasks.json             # Build and run tasks
+├── 📁 scripts/                # Windows development scripts
+│   ├── build.bat              # Build project
+│   ├── start.bat              # Build and run
+│   ├── debug.bat              # Debug build with VS debugger
+│   ├── clean.bat              # Clean build artifacts
+│   └── setup.ps1              # PowerShell automation script
+├── 📁 src/                    # Source code directory
+│   └── main.cpp               # Application entry point
+├── 🐳 docker-compose.yml      # Docker development services
+├── 🐳 Dockerfile              # Multi-stage container build
+├── 🔧 Makefile                # Cross-platform build targets
+├── 📦 vcpkg.json              # Package dependencies & features
+├── ⚙️ CMakeLists.txt          # CMake configuration
+└── 📄 .env                    # Environment variables
 ```
 
----
+## 🚀 Quick Start
 
-## without using dev containers
+### Option 1: Windows Local Development (Recommended)
 
-```bash
+**Prerequisites:**
+- Windows 10/11
+- Visual Studio 2022 (Community/Professional/Enterprise)
+- CMake 3.15+ (included with VS)
+- Ninja build system (included with VS)
 
-# Configure the project
-cmake -S . -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
-
+**Commands:**
+```cmd
 # Build the project
-cmake --build build
+scripts\build.bat
 
-# Run the project
-./build/main.exe
+# Build and run application
+scripts\start.bat
 
+# Debug build with Visual Studio debugger
+scripts\debug.bat
+
+# Clean build artifacts
+scripts\clean.bat
 ```
 
-# Run the project
+### Option 2: Docker Development (Any OS)
 
-## 🏗️ Project Structure
+**Prerequisites:**
+- Docker Desktop
+- Docker Compose
 
-```
-cpp-project-template/
-├── 📁 .devcontainer/
-│   ├── 🐳 Dockerfile              # Development environment
-│   └── ⚙️ devcontainer.json       # VS Code container config
-├── 📁 .vscode/
-│   ├── 🎯 launch.json             # Debug configuration
-│   └── 📋 tasks.json              # Build & run tasks
-├── 📁 src/                        # Source files (create as needed)
-├── 📁 include/                    # Header files (create as needed)
-├── 🛠️ CMakeLists.txt              # Build configuration
-├── 📦 vcpkg.json                  # Package dependencies
-├── 💻 main.cpp                    # Entry point
-└── 📖 README.md                   # This file
+**Commands:**
+```bash
+# Start interactive development environment
+docker-compose up dev
+
+# Inside container - available commands:
+cmake-build    # Configure and build
+cmake-start    # Build and run
+cmake-clean    # Clean artifacts
+cmake-info     # Show project information
 ```
 
----
-
-## ✨ Features
-
-### 🔧 Development Tools
-
-- **CMake 4.0+** - Modern build system
-- **Ninja** - Fast parallel builds
-- **vcpkg** - Cross-platform package manager
-- **GDB** - Full debugging support
-- **Clang-Tidy** - Static analysis (optional)
-
-### 🐳 Docker Integration
-
-- **Isolated Environment** - No local setup required
-- **Consistent Builds** - Same environment everywhere
-- **VS Code Integration** - Seamless development experience
-
-### 📝 VS Code Features
-
-- **IntelliSense** - Auto-completion and syntax highlighting
-- **Debugging** - Breakpoints, variable inspection, call stack
-- **Tasks** - One-click build and run
-- **Extensions** - Pre-configured C++ development tools
-
----
-
-## 📦 Managing Dependencies
-
-### Adding a New Library
-
-1. **Add to `vcpkg.json`:**
-
-   ```json
-   {
-     "name": "my-cpp-project",
-     "version-string": "1.0.0",
-     "dependencies": ["fmt", "spdlog", "catch2"]
-   }
-   ```
-
-2. **Use in `CMakeLists.txt`:**
-
-   ```cmake
-   find_package(fmt CONFIG REQUIRED)
-   find_package(spdlog CONFIG REQUIRED)
-
-   target_link_libraries(main PRIVATE fmt::fmt spdlog::spdlog)
-   ```
-
-3. **Rebuild the container** or run:
-   ```bash
-   vcpkg install
-   cmake --build build
-   ```
-
----
-
-## 🛠️ Manual Docker Usage
-
-If you prefer command line over VS Code:
+### Option 3: Makefile (Linux/macOS/Windows with Make)
 
 ```bash
-# Build the development image
-docker build -t cpp-dev-env .devcontainer
+# Build project
+make build
 
-# Run interactive development container
-docker run -it --rm \
-  -v $(pwd):/workspace \
-  -w /workspace \
-  cpp-dev-env bash
+# Build and run
+make start
 
-# Inside container: configure and build
-cmake -S . -B build -G Ninja \
-  -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
+# Clean
+make clean
 
-cmake --build build
-./build/main
+# Docker development
+make docker-dev
+
+# Show all targets
+make help
 ```
 
+## 🛠️ Development Workflows
+
+### Windows Development Scripts
+
+#### **Batch Files Method**
+```cmd
+# Complete workflow
+scripts\build.bat        # Configure and build
+scripts\start.bat        # Build and run
+scripts\debug.bat        # Debug build + launch debugger
+scripts\clean.bat        # Clean build artifacts
+```
+
+#### **PowerShell Method**
+```powershell
+# Alternative PowerShell interface
+scripts\setup.ps1 build      # Build project
+scripts\setup.ps1 start      # Build and run
+scripts\setup.ps1 clean      # Clean artifacts
+scripts\setup.ps1 configure  # Configure only
+```
+
+#### **VS Code Integration**
+- Open project in VS Code
+- **Ctrl+Shift+B** - Default build task
+- **F5** - Debug with breakpoints
+- **Ctrl+Shift+P** → "Tasks: Run Task":
+  - Build (Windows)
+  - Run (Windows) 
+  - Debug Build (Windows)
+  - Clean (Windows)
+  - Docker Build
+  - Docker Dev
+
+### Docker Development
+
+#### **Interactive Development**
+```bash
+# Method 1: Direct interactive session
+docker-compose up dev
+
+# Method 2: Background + enter
+docker-compose up -d dev
+docker-compose exec dev bash
+
+# Inside container:
+cmake-build     # Build project
+cmake-start     # Build and run  
+cmake-clean     # Clean
+cmake-info      # Project details
+exit            # Leave container
+
+# Stop services
+docker-compose down
+```
+
+#### **One-Shot Operations**
+```bash
+# Build only
+docker-compose up build
+
+# Run production container
+docker-compose up app
+
+# Background production
+docker-compose up -d app
+```
+
+## 📦 Package Management with vcpkg
+
+### **Available Features**
+The template includes pre-configured vcpkg features:
+
+```json
+{
+  "features": {
+    "json": {
+      "description": "JSON support",
+      "dependencies": ["nlohmann-json"]
+    },
+    "fmt": {
+      "description": "Formatting library", 
+      "dependencies": ["fmt"]
+    },
+    "testing": {
+      "description": "Testing framework",
+      "dependencies": ["catch2"]
+    }
+  }
+}
+```
+
+### **Enable Features**
+```cmd
+# Install with JSON support
+vcpkg install --feature-flags=versions --x-manifest-root=. --feature json
+
+# Install with formatting library
+vcpkg install --feature-flags=versions --x-manifest-root=. --feature fmt
+
+# Install testing framework
+vcpkg install --feature-flags=versions --x-manifest-root=. --feature testing
+```
+
+### **Add New Dependencies**
+Edit `vcpkg.json`:
+```json
+{
+  "dependencies": [
+    "boost-filesystem",
+    "opencv4",
+    "sqlite3"
+  ]
+}
+```
+
+## 🔧 Template Customization
+
+### **Using as Template**
+1. Copy/clone this project structure
+2. Rename the project folder (name auto-detected)
+3. Start coding - everything works automatically!
+
+### **Project Name Detection**
+The template automatically detects project name from folder:
+- Folder: `MyAwesomeProject` → Executable: `MyAwesomeProject.exe`
+- No manual configuration needed
+
+### **Adding Source Files**
+Simply add `.cpp` files to `src/` directory:
+```
+src/
+├── main.cpp
+├── utils.cpp
+├── networking/
+│   └── client.cpp
+└── gui/
+    └── window.cpp
+```
+
+### **Custom Build Configurations**
+```cmake
+# Debug with extra flags
+cmake -B build_debug -S . -G Ninja -DCMAKE_BUILD_TYPE=Debug
+
+# Release with optimizations  
+cmake -B build_release -S . -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+# Custom configuration
+cmake -B build_custom -S . -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
+```
+
+## 🎯 Environment-Specific Features
+
+### **Windows Features**
+- ✅ Visual Studio 2022 auto-detection (Enterprise/Professional/Community)
+- ✅ Developer Command Prompt integration
+- ✅ Visual Studio debugger launch (`debug.bat`)
+- ✅ vcpkg integration
+- ✅ PowerShell and Batch script support
+
+### **Docker Features** 
+- ✅ Multi-stage builds (builder + runtime)
+- ✅ Development container with tools
+- ✅ Production-ready minimal container
+- ✅ Volume mounting for live development
+- ✅ Build cache optimization
+
+### **VS Code Features**
+- ✅ Integrated tasks for build/run/debug
+- ✅ Debug configuration with breakpoints
+- ✅ Dev container support
+- ✅ IntelliSense and code completion
+- ✅ Terminal integration
+
+## 📋 Command Reference
+
+### **Windows Commands**
+| Command | Description |
+|---------|-------------|
+| `scripts\build.bat` | Configure and build project |
+| `scripts\start.bat` | Build and run application |
+| `scripts\debug.bat` | Debug build + launch VS debugger |
+| `scripts\clean.bat` | Clean all build artifacts |
+| `scripts\setup.ps1 ` | PowerShell interface |
+
+### **Docker Commands**
+| Command | Description |
+|---------|-------------|
+| `docker-compose up dev` | Interactive development environment |
+| `docker-compose up build` | Build project only |
+| `docker-compose up app` | Run production container |
+| `docker-compose down` | Stop all services |
+
+### **Container Commands** (Inside dev container)
+| Command | Description |
+|---------|-------------|
+| `cmake-build` | Configure and build project |
+| `cmake-start` | Build and run application |
+| `cmake-clean` | Clean build artifacts |
+| `cmake-info` | Show project information |
+
+### **Make Commands**
+| Command | Description |
+|---------|-------------|
+| `make build` | Build project |
+| `make start` | Build and run |
+| `make clean` | Clean artifacts |
+| `make docker-dev` | Start Docker development |
+| `make help` | Show all targets |
+
+## 🛡️ System Requirements
+
+### **Windows Development**
+- Windows 10/11 (64-bit)
+- Visual Studio 2022 (any edition)
+- 8GB+ RAM recommended
+- 2GB+ disk space
+
+### **Docker Development**
+- Docker Desktop 4.0+
+- 4GB+ RAM allocated to Docker
+- 2GB+ disk space for images
+- Windows/Linux/macOS support
+
+### **General**
+- C++17 compatible compiler
+- CMake 3.15 or later
+- Git (for cloning/version control)
+
+## 🐛 Troubleshooting
+
+### **Windows Issues**
+```cmd
+# CMake not found
+# Solution: Install Visual Studio 2022 with C++ workload
+
+# Ninja not found  
+# Solution: Run from "Developer Command Prompt for VS 2022"
+
+# Build fails
+# Solution: Clean and rebuild
+scripts\clean.bat
+scripts\build.bat
+```
+
+### **Docker Issues**
+```bash
+# Container won't start
+# Solution: Ensure Docker Desktop is running
+docker --version
+
+# Build cache issues
+# Solution: Clean build and restart
+docker-compose down -v
+docker-compose up dev --build
+
+# Permission denied
+# Solution: Check Docker daemon status
+```
+
+### **Common Solutions**
+```cmd
+# Complete reset - Windows
+scripts\clean.bat
+rmdir /s /q build
+scripts\build.bat
+
+# Complete reset - Docker
+docker-compose down -v
+docker system prune -f
+docker-compose up dev --build
+```
+
+## 📄 License
+
+This template is released under the **MIT License**. See `LICENSE` file for details.
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
+
+## 🙏 Acknowledgments
+
+- Built with modern C++17 standards
+- Inspired by Docker best practices[2][3]
+- CMake configuration follows modern patterns[4]
+- Cross-platform compatibility focus
+
 ---
 
-## 🚀 Customization
+**⭐ If this template saves you time, please star the repository!**
 
-### Project Setup
+**Made with ❤️ for productive C++ development. Happy coding! 🚀**
 
-1. **Rename** your project in `CMakeLists.txt`:
-
-   ```cmake
-   project(YourProjectName VERSION 1.0.0)
-   ```
-
-2. **Update** `vcpkg.json` with your project details:
-
-   ```json
-   {
-     "name": "your-project-name",
-     "version-string": "1.0.0"
-   }
-   ```
-
-3. **Replace** `main.cpp` with your actual source code
-
-### Build Configuration
-
-- **Debug builds**: `cmake -DCMAKE_BUILD_TYPE=Debug`
-- **Release builds**: `cmake -DCMAKE_BUILD_TYPE=Release`
-- **Custom flags**: Modify `CMakeLists.txt`
-
----
+[1] https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/32147082/df8ecdc3-2b51-4a9c-abe3-a7eaa6b40b95/paste.txt
+[2] https://earthly.dev/blog/docker-and-makefiles/
+[3] https://docs.docker.com/guides/cpp/develop/
+[4] https://github.com/filipdutescu/modern-cpp-template
+[5] https://github.com/veracode/example-cpp-makefile
+[6] https://docs.docker.com/guides/cpp/containerize/
+[7] https://github.com/TheNetAdmin/Makefile-Templates
+[8] https://github.com/AndriyKalashnykov/cpp-sample-app
+[9] https://ddanilov.me/dockerized-cpp-build
+[10] https://stackoverflow.com/questions/2481269/how-to-make-a-simple-c-makefile
+[11] https://docs.docker.com/build/building/best-practices/

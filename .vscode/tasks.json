@@ -2,23 +2,9 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Setup VS Environment and Configure",
+      "label": "Build (Windows)",
       "type": "shell",
-      "command": "powershell",
-      "args": ["-ExecutionPolicy", "Bypass", "-File", "setup.ps1", "configure"],
-      "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Build",
-      "type": "shell",
-      "command": "powershell",
-      "args": ["-ExecutionPolicy", "Bypass", "-File", "setup.ps1", "build"],
+      "command": "${workspaceFolder}/scripts/build.bat",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -28,13 +14,15 @@
         "reveal": "always",
         "focus": false,
         "panel": "shared"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}"
       }
     },
     {
-      "label": "Run",
+      "label": "Run (Windows)",
       "type": "shell",
-      "command": "powershell",
-      "args": ["-ExecutionPolicy", "Bypass", "-File", "setup.ps1", "start"],
+      "command": "${workspaceFolder}/scripts/start.bat",
       "group": "test",
       "presentation": {
         "echo": true,
@@ -44,11 +32,36 @@
       }
     },
     {
-      "label": "Clean",
+      "label": "Debug Build (Windows)",
       "type": "shell",
-      "command": "powershell",
-      "args": ["-ExecutionPolicy", "Bypass", "-File", "setup.ps1", "clean"],
+      "command": "${workspaceFolder}/scripts/debug.bat",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Clean (Windows)",
+      "type": "shell",
+      "command": "${workspaceFolder}/scripts/clean.bat",
       "group": "build"
+    },
+    {
+      "label": "Docker Build",
+      "type": "shell",
+      "command": "docker-compose",
+      "args": ["up", "build"],
+      "group": "build"
+    },
+    {
+      "label": "Docker Dev",
+      "type": "shell",
+      "command": "docker-compose",
+      "args": ["up", "dev"],
+      "group": "test"
     }
   ]
 }

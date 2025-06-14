@@ -5,7 +5,7 @@ services:
       target: builder
       args:
         - BUILD_MODE=development
-    container_name: cpp-project-dev
+    container_name: ${COMPOSE_PROJECT_NAME:-vos}-dev
     volumes:
       - .:/app
       - build-cache:/app/build
@@ -16,25 +16,30 @@ services:
       - CMAKE_BUILD_TYPE=Debug
       - PROJECT_ROOT=/app
       - BUILD_ROOT=/app/build
-    command: >
-      bash -c "
-        echo '🚀 C++ Development Environment Ready!' &&
-        echo 'Root Directory: /app' &&
-        echo 'Build Directory: /app/build' &&
-        echo 'Working Directory: $$(pwd)' &&
-        echo '' &&
-        echo 'Available commands:' &&
-        echo '  cmake-build  - Configure and build project' &&
-        echo '  cmake-start  - Build and run project' &&
-        echo '  cmake-clean  - Clean build artifacts' &&
-        echo '  cmake-info   - Show path information' &&
-        echo '' &&
-        alias cmake-build='echo \"Building from $$(pwd)...\" && cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=$${CMAKE_BUILD_TYPE:-Release} && cmake --build build && echo \"Build completed from $$(pwd)!\"' &&
-        alias cmake-start='echo \"Building and running from $$(pwd)...\" && cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=$${CMAKE_BUILD_TYPE:-Release} && cmake --build build && echo \"Running from $$(pwd)...\" && ./build/bin/CppProject docker' &&
-        alias cmake-clean='echo \"Cleaning from $$(pwd)...\" && rm -rf build && echo \"Clean completed from $$(pwd)!\"' &&
-        alias cmake-info='echo \"=== Path Information ===\" && echo \"Current Directory: $$(pwd)\" && echo \"Project Root: $${PROJECT_ROOT}\" && echo \"Build Root: $${BUILD_ROOT}\" && echo \"Contents:\" && ls -la' &&
+    command: |
+      bash -c '
+        echo "🚀 C++ Development Environment Ready!" &&
+        echo "Project: $$(basename $$(pwd))" &&
+        echo "Root Directory: /app" &&
+        echo "Build Directory: /app/build" &&
+        echo "Working Directory: $$(pwd)" &&
+        echo "" &&
+        echo "Available commands:" &&
+        echo "  cmake-build  - Configure and build project" &&
+        echo "  cmake-start  - Build and run project" && 
+        echo "  cmake-clean  - Clean build artifacts" &&
+        echo "  cmake-info   - Show path information" &&
+        echo "" &&
+        
+        PROJECT_NAME=$$(basename $$(pwd)) &&
+        
+        alias cmake-build="echo \"Building $$PROJECT_NAME...\" && cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=$${CMAKE_BUILD_TYPE:-Release} && cmake --build build && echo \"Build completed for $$PROJECT_NAME!\"" &&
+        alias cmake-start="echo \"Running $$PROJECT_NAME...\" && cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=$${CMAKE_BUILD_TYPE:-Release} && cmake --build build && ./build/bin/$$PROJECT_NAME docker" &&
+        alias cmake-clean="echo \"Cleaning $$PROJECT_NAME...\" && rm -rf build && echo \"Clean completed for $$PROJECT_NAME!\"" &&
+        alias cmake-info="echo \"=== Project Information ===\" && echo \"Name: $$PROJECT_NAME\" && echo \"Directory: $$(pwd)\" && echo \"Files:\" && find src -name \"*.cpp\" -o -name \"*.c\" 2>/dev/null | head -10" &&
+        
         exec bash
-      "
+      '
 
   app:
     build:
@@ -42,11 +47,20 @@ services:
       target: runtime
       args:
         - BUILD_MODE=production
-    container_name: cpp-project-app
+    container_name: ${COMPOSE_PROJECT_NAME:-vos}-app
     working_dir: /app
     environment:
       - PROJECT_ROOT=/app
-    command: ["./CppProject", "docker"]
+    command: |
+      bash -c '
+        PROJECT_NAME=$$(basename $$(pwd)) &&
+        if [ -f ./$$PROJECT_NAME ]; then
+          ./$$PROJECT_NAME docker
+        else
+          echo "Executable not found for project: $$PROJECT_NAME"
+          exit 1
+        fi
+      '
 
   build:
     build:
@@ -59,16 +73,14 @@ services:
     environment:
       - CMAKE_BUILD_TYPE=Release
       - PROJECT_ROOT=/app
-    command: >
-      bash -c "
-        echo '=== Build Information ===' &&
-        echo 'Building from: $$(pwd)' &&
-        echo 'Project Root: $${PROJECT_ROOT}' &&
-        echo 'CMake Build Type: $${CMAKE_BUILD_TYPE}' &&
+    command: |
+      bash -c '
+        PROJECT_NAME=$$(basename $$(pwd)) &&
+        echo "=== Building Project: $$PROJECT_NAME ===" &&
         cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=$${CMAKE_BUILD_TYPE} &&
         cmake --build build &&
-        echo 'Build completed successfully from $$(pwd)!'
-      "
+        echo "Build completed for: $$PROJECT_NAME"
+      '
 
 volumes:
   build-cache:
