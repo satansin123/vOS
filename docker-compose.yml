@@ -1,0 +1,75 @@
+services:
+  dev:
+    build:
+      context: .
+      target: builder
+      args:
+        - BUILD_MODE=development
+    container_name: cpp-project-dev
+    volumes:
+      - .:/app
+      - build-cache:/app/build
+    working_dir: /app
+    stdin_open: true
+    tty: true
+    environment:
+      - CMAKE_BUILD_TYPE=Debug
+      - PROJECT_ROOT=/app
+      - BUILD_ROOT=/app/build
+    command: >
+      bash -c "
+        echo '🚀 C++ Development Environment Ready!' &&
+        echo 'Root Directory: /app' &&
+        echo 'Build Directory: /app/build' &&
+        echo 'Working Directory: $$(pwd)' &&
+        echo '' &&
+        echo 'Available commands:' &&
+        echo '  cmake-build  - Configure and build project' &&
+        echo '  cmake-start  - Build and run project' &&
+        echo '  cmake-clean  - Clean build artifacts' &&
+        echo '  cmake-info   - Show path information' &&
+        echo '' &&
+        alias cmake-build='echo \"Building from $$(pwd)...\" && cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=$${CMAKE_BUILD_TYPE:-Release} && cmake --build build && echo \"Build completed from $$(pwd)!\"' &&
+        alias cmake-start='echo \"Building and running from $$(pwd)...\" && cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=$${CMAKE_BUILD_TYPE:-Release} && cmake --build build && echo \"Running from $$(pwd)...\" && ./build/bin/CppProject docker' &&
+        alias cmake-clean='echo \"Cleaning from $$(pwd)...\" && rm -rf build && echo \"Clean completed from $$(pwd)!\"' &&
+        alias cmake-info='echo \"=== Path Information ===\" && echo \"Current Directory: $$(pwd)\" && echo \"Project Root: $${PROJECT_ROOT}\" && echo \"Build Root: $${BUILD_ROOT}\" && echo \"Contents:\" && ls -la' &&
+        exec bash
+      "
+
+  app:
+    build:
+      context: .
+      target: runtime
+      args:
+        - BUILD_MODE=production
+    container_name: cpp-project-app
+    working_dir: /app
+    environment:
+      - PROJECT_ROOT=/app
+    command: ["./CppProject", "docker"]
+
+  build:
+    build:
+      context: .
+      target: builder
+    volumes:
+      - .:/app
+      - build-cache:/app/build
+    working_dir: /app
+    environment:
+      - CMAKE_BUILD_TYPE=Release
+      - PROJECT_ROOT=/app
+    command: >
+      bash -c "
+        echo '=== Build Information ===' &&
+        echo 'Building from: $$(pwd)' &&
+        echo 'Project Root: $${PROJECT_ROOT}' &&
+        echo 'CMake Build Type: $${CMAKE_BUILD_TYPE}' &&
+        cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=$${CMAKE_BUILD_TYPE} &&
+        cmake --build build &&
+        echo 'Build completed successfully from $$(pwd)!'
+      "
+
+volumes:
+  build-cache:
+    driver: local

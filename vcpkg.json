@@ -1,0 +1,29 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Microsoft/vcpkg/main/scripts/vcpkg.schema.json",
+    "name": "vos",
+    "version": "1.0.0",
+    "dependencies": [
+        {
+            "name": "vcpkg-cmake",
+            "host": true
+        },
+        {
+            "name": "vcpkg-cmake-config",
+            "host": true
+        }
+    ],
+    "features": {
+        "json": {
+            "description": "JSON support",
+            "dependencies": ["nlohmann-json"]
+        },
+        "fmt": {
+            "description": "Formatting library",
+            "dependencies": ["fmt"]
+        },
+        "testing": {
+            "description": "Testing framework",
+            "dependencies": ["catch2"]
+        }
+    }
+}
