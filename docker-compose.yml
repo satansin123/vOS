@@ -16,28 +16,63 @@ services:
       - CMAKE_BUILD_TYPE=Debug
       - PROJECT_ROOT=/app
       - BUILD_ROOT=/app/build
+      - PROJECT_NAME=vOS
     command: |
       bash -c '
         echo "🚀 C++ Development Environment Ready!" &&
-        echo "Project: $$(basename $$(pwd))" &&
+        echo "Project: vOS" &&
         echo "Root Directory: /app" &&
         echo "Build Directory: /app/build" &&
         echo "Working Directory: $$(pwd)" &&
         echo "" &&
         echo "Available commands:" &&
         echo "  cmake-build  - Configure and build project" &&
-        echo "  cmake-start  - Build and run project" && 
+        echo "  cmake-start  - Build and run project" &&
         echo "  cmake-clean  - Clean build artifacts" &&
         echo "  cmake-info   - Show path information" &&
         echo "" &&
         
-        PROJECT_NAME=$$(basename $$(pwd)) &&
+        # Create permanent aliases in /etc/bash.bashrc for all bash sessions
+        echo "# vOS Development Aliases" >> /etc/bash.bashrc &&
+        echo "alias cmake-build=\"echo \\\"Building vOS...\\\" && cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=\\\${CMAKE_BUILD_TYPE:-Release} && cmake --build build && echo \\\"Build completed for vOS!\\\"\"" >> /etc/bash.bashrc &&
+        echo "alias cmake-start=\"echo \\\"Running vOS...\\\" && cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=\\\${CMAKE_BUILD_TYPE:-Release} && cmake --build build && ./build/bin/vOS docker\"" >> /etc/bash.bashrc &&
+        echo "alias cmake-clean=\"echo \\\"Cleaning vOS...\\\" && rm -rf build && echo \\\"Clean completed for vOS!\\\"\"" >> /etc/bash.bashrc &&
+        echo "alias cmake-info=\"echo \\\"=== Project Information ===\\\" && echo \\\"Name: vOS\\\" && echo \\\"Directory: \$$(pwd)\\\" && echo \\\"Files:\\\" && find src -name \\\"*.cpp\\\" -o -name \\\"*.c\\\" 2>/dev/null | head -10\"" >> /etc/bash.bashrc &&
         
-        alias cmake-build="echo \"Building $$PROJECT_NAME...\" && cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=$${CMAKE_BUILD_TYPE:-Release} && cmake --build build && echo \"Build completed for $$PROJECT_NAME!\"" &&
-        alias cmake-start="echo \"Running $$PROJECT_NAME...\" && cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=$${CMAKE_BUILD_TYPE:-Release} && cmake --build build && ./build/bin/$$PROJECT_NAME docker" &&
-        alias cmake-clean="echo \"Cleaning $$PROJECT_NAME...\" && rm -rf build && echo \"Clean completed for $$PROJECT_NAME!\"" &&
-        alias cmake-info="echo \"=== Project Information ===\" && echo \"Name: $$PROJECT_NAME\" && echo \"Directory: $$(pwd)\" && echo \"Files:\" && find src -name \"*.cpp\" -o -name \"*.c\" 2>/dev/null | head -10" &&
+        # Also create them as shell scripts for direct execution
+        echo "#!/bin/bash" > /usr/local/bin/cmake-build &&
+        echo "echo \"Building vOS...\"" >> /usr/local/bin/cmake-build &&
+        echo "cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=\${CMAKE_BUILD_TYPE:-Release}" >> /usr/local/bin/cmake-build &&
+        echo "cmake --build build" >> /usr/local/bin/cmake-build &&
+        echo "echo \"Build completed for vOS!\"" >> /usr/local/bin/cmake-build &&
+        chmod +x /usr/local/bin/cmake-build &&
         
+        echo "#!/bin/bash" > /usr/local/bin/cmake-start &&
+        echo "echo \"Running vOS...\"" >> /usr/local/bin/cmake-start &&
+        echo "cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=\${CMAKE_BUILD_TYPE:-Release}" >> /usr/local/bin/cmake-start &&
+        echo "cmake --build build" >> /usr/local/bin/cmake-start &&
+        echo "if [ -f ./build/bin/vOS ]; then" >> /usr/local/bin/cmake-start &&
+        echo "  ./build/bin/vOS docker" >> /usr/local/bin/cmake-start &&
+        echo "else" >> /usr/local/bin/cmake-start &&
+        echo "  echo \"Executable not found: ./build/bin/vOS\"" >> /usr/local/bin/cmake-start &&
+        echo "fi" >> /usr/local/bin/cmake-start &&
+        chmod +x /usr/local/bin/cmake-start &&
+        
+        echo "#!/bin/bash" > /usr/local/bin/cmake-clean &&
+        echo "echo \"Cleaning vOS...\"" >> /usr/local/bin/cmake-clean &&
+        echo "rm -rf build" >> /usr/local/bin/cmake-clean &&
+        echo "echo \"Clean completed for vOS!\"" >> /usr/local/bin/cmake-clean &&
+        chmod +x /usr/local/bin/cmake-clean &&
+        
+        echo "#!/bin/bash" > /usr/local/bin/cmake-info &&
+        echo "echo \"=== Project Information ===\"" >> /usr/local/bin/cmake-info &&
+        echo "echo \"Name: vOS\"" >> /usr/local/bin/cmake-info &&
+        echo "echo \"Directory: \$(pwd)\"" >> /usr/local/bin/cmake-info &&
+        echo "echo \"Files:\"" >> /usr/local/bin/cmake-info &&
+        echo "find src -name \"*.cpp\" -o -name \"*.c\" 2>/dev/null | head -10" >> /usr/local/bin/cmake-info &&
+        chmod +x /usr/local/bin/cmake-info &&
+        
+        echo "Development environment setup complete!" &&
         exec bash
       '
 
@@ -51,16 +86,8 @@ services:
     working_dir: /app
     environment:
       - PROJECT_ROOT=/app
-    command: |
-      bash -c '
-        PROJECT_NAME=$$(basename $$(pwd)) &&
-        if [ -f ./$$PROJECT_NAME ]; then
-          ./$$PROJECT_NAME docker
-        else
-          echo "Executable not found for project: $$PROJECT_NAME"
-          exit 1
-        fi
-      '
+      - PROJECT_NAME=vOS
+    command: ./vOS docker
 
   build:
     build:
@@ -73,13 +100,13 @@ services:
     environment:
       - CMAKE_BUILD_TYPE=Release
       - PROJECT_ROOT=/app
+      - PROJECT_NAME=vOS
     command: |
       bash -c '
-        PROJECT_NAME=$$(basename $$(pwd)) &&
-        echo "=== Building Project: $$PROJECT_NAME ===" &&
-        cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=$${CMAKE_BUILD_TYPE} &&
+        echo "=== Building Project: vOS ===" &&
+        cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=Release &&
         cmake --build build &&
-        echo "Build completed for: $$PROJECT_NAME"
+        echo "Build completed for: vOS"
       '
 
 volumes:
