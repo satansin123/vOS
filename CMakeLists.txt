@@ -15,14 +15,13 @@ message(STATUS "=== Build Configuration ===")
 message(STATUS "Project Name: ${PROJECT_NAME}")
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 
-add_executable(${PROJECT_NAME})
-
 file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.c")
 if(NOT SOURCES)
     message(FATAL_ERROR "No source files found in src/ directory")
 endif()
 
-target_sources(${PROJECT_NAME} PRIVATE ${SOURCES})
+add_executable(${PROJECT_NAME} ${SOURCES})
+
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin

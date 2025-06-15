@@ -1,0 +1,132 @@
+Project Structure:
+📁 vOS/
+  📁 .devcontainer/
+    📄 devcontainer.json
+  📁 .vscode/
+    📄 launch.json
+    📄 tasks.json
+  📁 scripts/
+    📄 build.bat
+    📄 clean.bat
+    📄 debug.bat
+    📄 setup.ps1
+    📄 start.bat
+  📁 src/
+    📄 main.cpp
+  📄 docker-compose.yml
+  📄 vcpkg.json
+
+---
+
+File Contents:
+// vOS/docker-compose.yml
+services: dev: build: context: . target: builder args: - BUILD_MODE=development container_name: ${COMPOSE_PROJECT_NAME:-vos}-dev volumes: - .:/app - build-cache:/app/build working_dir: /app stdin_open: true tty: true environment: - CMAKE_BUILD_TYPE=Debug - PROJECT_ROOT=/app - BUILD_ROOT=/app/build - PROJECT_NAME=vOS command: | bash -c ' echo "🚀 C++ Development Environment Ready!" && echo "Project: vOS" && echo "Root Directory: /app" && echo "Build Directory: /app/build" && echo "Working Directory: $$(pwd)" && echo "" && echo "Available commands:" && echo " cmake-build - Configure and build project" && echo " cmake-start - Build and run project" && echo " cmake-clean - Clean build artifacts" && echo " cmake-info - Show path information" && echo "" && echo " echo "alias cmake-build=\"echo \\\"Building vOS...\\\" && cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=\\\${CMAKE_BUILD_TYPE:-Release}&& cmake --build build && echo \\\"Build completed for vOS!\\\"\"" >> /etc/bash.bashrc && echo "alias cmake-start=\"echo \\\"Running vOS...\\\" && cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=\\\${CMAKE_BUILD_TYPE:-Release}&& cmake --build build && ./build/bin/vOS docker\"" >> /etc/bash.bashrc && echo "alias cmake-clean=\"echo \\\"Cleaning vOS...\\\" && rm -rf build && echo \\\"Clean completed for vOS!\\\"\"" >> /etc/bash.bashrc && echo "alias cmake-info=\"echo \\\"=== Project Information ===\\\" && echo \\\"Name: vOS\\\" && echo \\\"Directory: \$$(pwd)\\\" && echo \\\"Files:\\\" && find src -name \\\"*.cpp\\\" -o -name \\\"*.c\\\" 2>/dev/null | head -10\"" >> /etc/bash.bashrc && echo " echo "echo \"Building vOS...\"" >> /usr/local/bin/cmake-build && echo "cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=\${CMAKE_BUILD_TYPE:-Release}" >> /usr/local/bin/cmake-build && echo "cmake --build build" >> /usr/local/bin/cmake-build && echo "echo \"Build completed for vOS!\"" >> /usr/local/bin/cmake-build && chmod +x /usr/local/bin/cmake-build && echo " echo "echo \"Running vOS...\"" >> /usr/local/bin/cmake-start && echo "cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=\${CMAKE_BUILD_TYPE:-Release}" >> /usr/local/bin/cmake-start && echo "cmake --build build" >> /usr/local/bin/cmake-start && echo "if[-f ./build/bin/vOS]; then" >> /usr/local/bin/cmake-start && echo " ./build/bin/vOS docker" >> /usr/local/bin/cmake-start && echo "else" >> /usr/local/bin/cmake-start && echo " echo \"Executable not found: ./build/bin/vOS\"" >> /usr/local/bin/cmake-start && echo "fi" >> /usr/local/bin/cmake-start && chmod +x /usr/local/bin/cmake-start && echo " echo "echo \"Cleaning vOS...\"" >> /usr/local/bin/cmake-clean && echo "rm -rf build" >> /usr/local/bin/cmake-clean && echo "echo \"Clean completed for vOS!\"" >> /usr/local/bin/cmake-clean && chmod +x /usr/local/bin/cmake-clean && echo " echo "echo \"=== Project Information ===\"" >> /usr/local/bin/cmake-info && echo "echo \"Name: vOS\"" >> /usr/local/bin/cmake-info && echo "echo \"Directory: \$(pwd)\"" >> /usr/local/bin/cmake-info && echo "echo \"Files:\"" >> /usr/local/bin/cmake-info && echo "find src -name \"*.cpp\" -o -name \"*.c\" 2>/dev/null | head -10" >> /usr/local/bin/cmake-info && chmod +x /usr/local/bin/cmake-info && echo "Development environment setup complete!" && exec bash ' app: build: context: . target: runtime args: - BUILD_MODE=production container_name: ${COMPOSE_PROJECT_NAME:-vos}-app working_dir: /app environment: - PROJECT_ROOT=/app - PROJECT_NAME=vOS command: ./vOS docker build: build: context: . target: builder volumes: - .:/app - build-cache:/app/build working_dir: /app environment: - CMAKE_BUILD_TYPE=Release - PROJECT_ROOT=/app - PROJECT_NAME=vOS command: | bash -c ' echo "=== Building Project: vOS ===" && cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build && echo "Build completed for: vOS" '
+volumes: build-cache: driver: local
+
+// vOS/vcpkg.json
+{"$schema": "https: "name": "vos", "version": "1.0.0", "dependencies":[{"name": "vcpkg-cmake", "host": true},{"name": "vcpkg-cmake-config", "host": true}], "features":{"json":{"description": "JSON support", "dependencies":["nlohmann-json"]}, "fmt":{"description": "Formatting library", "dependencies":["fmt"]}, "testing":{"description": "Testing framework", "dependencies":["catch2"]}}}
+
+// vOS/src/main.cpp
+int main(int argc, char* argv[]){std::cout << "=== C++ Application ===" << std::endl; std::cout << "Running in: " <<(argc > 1 ? argv[1]: "local")<< " environment" << std::endl; std::cout << "Hello from C++!" << std::endl; std::string input; std::cout << "Enter 'quit' to exit, or any other text to echo: "; while(std::getline(std::cin, input)){if(input == "quit"){break;}std::cout << "You entered: " << input << std::endl; std::cout << "Enter 'quit' to exit, or any other text to echo: ";}std::cout << "Goodbye!" << std::endl; return 0;}
+
+// vOS/scripts/build.bat
+@echo off
+setlocal enabledelayedexpansion
+:: Dynamic path detection
+set "PROJECT_ROOT=%~dp0.."
+set "BUILD_DIR=%PROJECT_ROOT%\build"
+set "SCRIPTS_DIR=%PROJECT_ROOT%\scripts"
+echo === Dynamic C++ Build System ===
+echo Project Root: %PROJECT_ROOT%
+echo Build Directory: %BUILD_DIR%
+echo Scripts Directory: %SCRIPTS_DIR%
+echo.
+:: Check if we're in VS environment
+if defined VCINSTALLDIR(echo Already in Visual Studio environment goto :build):: Setup Visual Studio environment
+echo Setting up Visual Studio environment...
+set "VS_PATH=C:\Program Files\Microsoft Visual Studio\2022"
+if exist "%VS_PATH%\Enterprise\VC\Auxiliary\Build\vcvars64.bat"(call "%VS_PATH%\Enterprise\VC\Auxiliary\Build\vcvars64.bat" goto :build)if exist "%VS_PATH%\Professional\VC\Auxiliary\Build\vcvars64.bat"(call "%VS_PATH%\Professional\VC\Auxiliary\Build\vcvars64.bat" goto :build)if exist "%VS_PATH%\Community\VC\Auxiliary\Build\vcvars64.bat"(call "%VS_PATH%\Community\VC\Auxiliary\Build\vcvars64.bat" goto :build)echo ERROR: Visual Studio 2022 not found!
+echo Please install Visual Studio 2022 or run from Developer Command Prompt.
+exit /b 1
+:build
+echo.
+echo Configuring project...
+cmake -B "%BUILD_DIR%" -S "%PROJECT_ROOT%" -G Ninja -DCMAKE_BUILD_TYPE=Release
+if errorlevel 1(echo Configuration failed! exit /b 1)echo.
+echo Building project...
+cmake --build "%BUILD_DIR%"
+if errorlevel 1(echo Build failed! exit /b 1)echo.
+echo Build completed successfully!
+echo Executable: %BUILD_DIR%\bin\
+
+// vOS/scripts/clean.bat
+@echo off
+setlocal
+:: Dynamic path detection
+set "PROJECT_ROOT=%~dp0.."
+set "BUILD_DIR=%PROJECT_ROOT%\build"
+set "DEBUG_BUILD_DIR=%PROJECT_ROOT%\build_debug"
+echo === Cleaning Build Artifacts ===
+echo Project Root: %PROJECT_ROOT%
+if exist "%BUILD_DIR%"(echo Removing: %BUILD_DIR% rmdir /s /q "%BUILD_DIR%")if exist "%DEBUG_BUILD_DIR%"(echo Removing: %DEBUG_BUILD_DIR% rmdir /s /q "%DEBUG_BUILD_DIR%")echo Clean completed!
+
+// vOS/scripts/debug.bat
+@echo off
+setlocal enabledelayedexpansion
+:: Dynamic path detection
+set "PROJECT_ROOT=%~dp0.."
+set "BUILD_DIR=%PROJECT_ROOT%\build_debug"
+echo === Debug Build System ===
+echo Project Root: %PROJECT_ROOT%
+echo Debug Build Directory: %BUILD_DIR%
+echo.
+:: Check VS environment
+if defined VCINSTALLDIR(echo Already in Visual Studio environment goto :debug_build):: Setup Visual Studio environment
+echo Setting up Visual Studio environment...
+set "VS_PATH=C:\Program Files\Microsoft Visual Studio\2022"
+if exist "%VS_PATH%\Enterprise\VC\Auxiliary\Build\vcvars64.bat"(call "%VS_PATH%\Enterprise\VC\Auxiliary\Build\vcvars64.bat" goto :debug_build)if exist "%VS_PATH%\Professional\VC\Auxiliary\Build\vcvars64.bat"(call "%VS_PATH%\Professional\VC\Auxiliary\Build\vcvars64.bat" goto :debug_build)if exist "%VS_PATH%\Community\VC\Auxiliary\Build\vcvars64.bat"(call "%VS_PATH%\Community\VC\Auxiliary\Build\vcvars64.bat" goto :debug_build)echo ERROR: Visual Studio 2022 not found!
+exit /b 1
+:debug_build
+echo.
+echo Configuring for DEBUG build...
+cmake -B "%BUILD_DIR%" -S "%PROJECT_ROOT%" -G Ninja -DCMAKE_BUILD_TYPE=Debug
+if errorlevel 1(echo Debug configuration failed! exit /b 1)echo.
+echo Building DEBUG version...
+cmake --build "%BUILD_DIR%"
+if errorlevel 1(echo Debug build failed! exit /b 1)echo.
+echo Debug build completed successfully!
+echo.
+echo Starting debugger...
+:: Get project name dynamically
+for %%I in("%PROJECT_ROOT%")do set "PROJECT_NAME=%%~nxI"
+:: Launch with Visual Studio debugger
+if exist "%BUILD_DIR%\bin\%PROJECT_NAME%.exe"(echo Launching: %BUILD_DIR%\bin\%PROJECT_NAME%.exe devenv /debugexe "%BUILD_DIR%\bin\%PROJECT_NAME%.exe" debug)else(echo Executable not found! Check build output. exit /b 1)
+
+// vOS/scripts/setup.ps1
+param([string]$Action = "build")function Find-VisualStudio{$vsWhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" if(Test-Path $vsWhere){$vsPath = & $vsWhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath if($vsPath){return "$vsPath\VC\Auxiliary\Build\vcvars64.bat"}}$fallbackPaths = @("C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat", "C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvars64.bat", "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat")foreach($path in $fallbackPaths){if(Test-Path $path){return $path}}return $null}$inVSEnv = $env:VCINSTALLDIR -ne $null
+if(-not $inVSEnv){$vsSetupScript = Find-VisualStudio if(-not $vsSetupScript){Write-Error "Visual Studio 2022 not found. Please install Visual Studio 2022 or run from Developer PowerShell." exit 1}Write-Host "Setting up Visual Studio environment..." -ForegroundColor Green cmd /c "`"$vsSetupScript`" && set" | ForEach-Object{if($_ -match "^([^=]+)=(.*)"){[System.Environment]::SetEnvironmentVariable($matches[1], $matches[2])}}}switch($Action.ToLower()){"configure"{Write-Host "Configuring project..." -ForegroundColor Green cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=Release}"build"{Write-Host "Building project..." -ForegroundColor Green cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=Release cmake --build build}"start"{Write-Host "Building and running project..." -ForegroundColor Green cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=Release cmake --build build if($LASTEXITCODE -eq 0){Write-Host "Running application..." -ForegroundColor Green & ".\build\bin\CppProject.exe" local}}"clean"{Write-Host "Cleaning build artifacts..." -ForegroundColor Green if(Test-Path "build"){Remove-Item -Recurse -Force "build"}}default{Write-Host "Usage: .\setup.ps1[configure|build|start|clean]" -ForegroundColor Yellow}}
+
+// vOS/scripts/start.bat
+@echo off
+setlocal enabledelayedexpansion
+:: Dynamic path detection
+set "PROJECT_ROOT=%~dp0.."
+set "BUILD_DIR=%PROJECT_ROOT%\build"
+echo === Running Application ===
+:: Build first
+call "%~dp0build.bat"
+if errorlevel 1(echo Build failed, cannot run application exit /b 1):: Get project name dynamically
+for %%I in("%PROJECT_ROOT%")do set "PROJECT_NAME=%%~nxI"
+echo.
+echo Running application...
+if exist "%BUILD_DIR%\bin\%PROJECT_NAME%.exe"("%BUILD_DIR%\bin\%PROJECT_NAME%.exe" local)else(echo Executable not found: %BUILD_DIR%\bin\%PROJECT_NAME%.exe exit /b 1)
+
+// vOS/.vscode/launch.json
+{"version": "0.2.0", "configurations":[{"name": "Debug C++", "type": "cppdbg", "request": "launch", "program": "${workspaceFolder}/build/bin/CppProject", "args":["vscode"], "stopAtEntry": false, "cwd": "${workspaceFolder}", "environment":[], "externalConsole": false, "MIMode": "gdb", "preLaunchTask": "Build"}]}
+
+// vOS/.vscode/tasks.json
+{"version": "2.0.0", "tasks":[{"label": "Build(Windows)", "type": "shell", "command": "${workspaceFolder}/scripts/build.bat", "group":{"kind": "build", "isDefault": true}, "presentation":{"echo": true, "reveal": "always", "focus": false, "panel": "shared"}, "options":{"cwd": "${workspaceFolder}"}},{"label": "Run(Windows)", "type": "shell", "command": "${workspaceFolder}/scripts/start.bat", "group": "test", "presentation":{"echo": true, "reveal": "always", "focus": false, "panel": "shared"}},{"label": "Debug Build(Windows)", "type": "shell", "command": "${workspaceFolder}/scripts/debug.bat", "group": "build", "presentation":{"echo": true, "reveal": "always", "focus": false, "panel": "shared"}},{"label": "Clean(Windows)", "type": "shell", "command": "${workspaceFolder}/scripts/clean.bat", "group": "build"},{"label": "Docker Build", "type": "shell", "command": "docker-compose", "args":["up", "build"], "group": "build"},{"label": "Docker Dev", "type": "shell", "command": "docker-compose", "args":["up", "dev"], "group": "test"}]}
+
+// vOS/.devcontainer/devcontainer.json
+{"name": "C++ Development Container", "build":{"dockerfile": "../Dockerfile", "target": "builder"}, "customizations":{"vscode":{"settings":{"terminal.integrated.shell.linux": "/bin/bash", "cmake.buildDirectory": "${workspaceFolder}/build"}, "extensions":["ms-vscode.cpptools", "ms-vscode.cmake-tools", "ms-vscode.cpptools-extension-pack"]}}, "workspaceMount": "source=${localWorkspaceFolder},target=/app,type=bind", "workspaceFolder": "/app", "postCreateCommand": "echo 'Container ready for C++ development!'", "remoteUser": "root"}
+
