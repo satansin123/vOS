@@ -43,11 +43,18 @@ exit /b 1
 echo.
 echo Configuring project...
 cmake -B "%BUILD_DIR%" -S "%PROJECT_ROOT%" -G Ninja -DCMAKE_BUILD_TYPE=Release
-
 if errorlevel 1 (
-    echo Configuration failed!
-    exit /b 1
+    echo Configuration failed - attempting to clean and retry...
+    if exist "%BUILD_DIR%" (
+        rmdir /s /q "%BUILD_DIR%"
+    )
+    cmake -B "%BUILD_DIR%" -S "%PROJECT_ROOT%" -G Ninja -DCMAKE_BUILD_TYPE=Release
+    if errorlevel 1 (
+        echo Configuration still failed!
+        exit /b 1
+    )
 )
+
 
 echo.
 echo Building project...
