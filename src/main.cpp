@@ -1,8 +1,11 @@
+#include <chrono>
 #include<iostream>
+#include <thread>
 #include "kernel/Kernel.h"
 #include "kernel/DeviceRegistry.h"
 #include "kernel/Clock.h"
 #include "kernel/Logger.h"
+#include "kernel/InputMonitor.h"
 
 using namespace std;
 
@@ -27,10 +30,15 @@ int main(int argc, char* argv[]){
 
     cout << endl;
     cout << "Real-time clock running... System will auto-tick every 100ms" << endl;
-    cout << "Press Enter to shutdown after observing ticks..." << endl;
+    cout << "Type 'exit to shutdown the system' " << endl;
     cout << endl;
 
-    cin.get();
+    InputMonitor inputMonitor;
+    inputMonitor.startMonitoring();
+
+    while (!inputMonitor.isShutdownRequested()) {
+        this_thread::sleep_for(chrono::milliseconds(50));
+    }
     
     cout << endl;
     cout << "Final tick count: " << Kernel::getTicks() << endl;

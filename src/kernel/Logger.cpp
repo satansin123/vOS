@@ -34,6 +34,7 @@ void Logger::logHeartbeat(){
     }
     uint64_t currentTick = Kernel::getTicks();
     cout<<"[Tick "<<currentTick<<"] System heartbeat"<<endl;
+    cout.flush();
 }
 
 void Logger::log(const string& message){
