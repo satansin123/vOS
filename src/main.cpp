@@ -1,8 +1,7 @@
 #include<iostream>
-#include<chrono>
-#include<thread>
 #include "kernel/Kernel.h"
 #include "kernel/DeviceRegistry.h"
+#include "kernel/Clock.h"
 
 using namespace std;
 
@@ -21,17 +20,18 @@ int main(int argc, char* argv[]){
     cout<<"===System Status==="<<endl;
     cout<<"Kernel Initialised : " <<(kernel.isInitialized() ? "YES":"NO")<<endl;
     cout << "Device count: " << kernel.getDeviceRegistry().getDeviceCount() << endl;
+    cout<<"Clock running: "<<(kernel.getClock().isRunning() ? "YES" : "NO")<<endl;
     cout << "Current tick count: " << Kernel::getTicks() << endl;
 
-    cout <<endl;
-    cout << "Simulating system ticks..." <<endl;
-    for (int i = 0; i < 5; ++i) {
-        Kernel::incrementTicks();
-        cout << "Tick: " << Kernel::getTicks() <<endl;
-        this_thread::sleep_for(chrono::milliseconds(100));
-    }
+    cout << endl;
+    cout << "Real-time clock running... System will auto-tick every 100ms" << endl;
+    cout << "Press Enter to shutdown after observing ticks..." << endl;
+    cout << endl;
+
+    cin.get();
     
     cout << endl;
+    cout << "Final tick count: " << Kernel::getTicks() << endl;
     cout << "Shutting down system..." << endl;
     kernel.shutdown();
     

@@ -1,5 +1,6 @@
 #include "Kernel.h"
 #include "DeviceRegistry.h"
+#include "Clock.h"
 #include <atomic>
 #include <cstdint>
 #include<iostream>
@@ -8,10 +9,11 @@
 using namespace std;
 
 unique_ptr<Kernel> Kernel::instance = nullptr;
-atomic<uint64_t> Kernel::tickCounter = 0;
+atomic<uint64_t> Kernel::tickCounter {0};
 
 Kernel::Kernel() : initialized(false){
     deviceRegistry = make_unique<DeviceRegistry>();
+    systemClock = make_unique<Clock>();
 }
 
 Kernel::~Kernel(){
@@ -41,7 +43,10 @@ bool Kernel::initialize(){
 
     cout << "[BOOT] Device registry initialized" << endl;
 
-    cout << "[BOOT] System clock initialized" << std::endl;
+    if (!systemClock->initialise()) {
+        cout<<"[BOOT] ERROR: Failed to initialize system clock" <<endl;
+    }
+    cout << "[BOOT] System clock initialized" << endl;
     initialized = true;
     cout<< "[BOOT] vOS ready!"<<endl;
     return true;
@@ -51,6 +56,8 @@ void Kernel::shutdown(){
     if(!initialized){
         return;
     }
+    cout << "[SHUTDOWN] Stopping system ticks..." << endl;
+    systemClock->stop();
 
     cout<<"[SHUTDOWN] cleaning up devices..."<<endl;
     deviceRegistry->cleanup();

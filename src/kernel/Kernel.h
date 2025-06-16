@@ -6,6 +6,7 @@
 using namespace std;
 
 class DeviceRegistry;
+class Clock;
 
 class Kernel{
     private:
@@ -13,6 +14,7 @@ class Kernel{
         static atomic<uint64_t> tickCounter;
 
         unique_ptr<DeviceRegistry> deviceRegistry;
+        unique_ptr<Clock> systemClock;
         bool initialized;
 
         Kernel();
@@ -36,6 +38,9 @@ class Kernel{
 
         DeviceRegistry& getDeviceRegistry() const {
             return *deviceRegistry;
+        }
+        Clock& getClock() const {
+            return *systemClock;
         }
 
         static constexpr const char* getVersion(){
