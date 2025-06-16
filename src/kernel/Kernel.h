@@ -7,6 +7,7 @@ using namespace std;
 
 class DeviceRegistry;
 class Clock;
+class Logger;
 
 class Kernel{
     private:
@@ -15,6 +16,7 @@ class Kernel{
 
         unique_ptr<DeviceRegistry> deviceRegistry;
         unique_ptr<Clock> systemClock;
+        unique_ptr<Logger> logger;
         bool initialized;
 
         Kernel();
@@ -41,6 +43,9 @@ class Kernel{
         }
         Clock& getClock() const {
             return *systemClock;
+        }
+        Logger& getLogger() const{
+            return *logger;
         }
 
         static constexpr const char* getVersion(){

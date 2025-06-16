@@ -2,6 +2,7 @@
 #include "kernel/Kernel.h"
 #include "kernel/DeviceRegistry.h"
 #include "kernel/Clock.h"
+#include "kernel/Logger.h"
 
 using namespace std;
 
@@ -19,6 +20,7 @@ int main(int argc, char* argv[]){
     cout<<endl;
     cout<<"===System Status==="<<endl;
     cout<<"Kernel Initialised : " <<(kernel.isInitialized() ? "YES":"NO")<<endl;
+    cout << "Logger initialized: " << (kernel.getLogger().isInitialized() ? "YES" : "NO") <<endl;
     cout << "Device count: " << kernel.getDeviceRegistry().getDeviceCount() << endl;
     cout<<"Clock running: "<<(kernel.getClock().isRunning() ? "YES" : "NO")<<endl;
     cout << "Current tick count: " << Kernel::getTicks() << endl;

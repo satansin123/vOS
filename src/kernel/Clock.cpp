@@ -1,9 +1,9 @@
 #include "Clock.h"
 #include "Kernel.h"
+#include "Logger.h"
 #include <chrono>
-#include <cstdint>
 #include <thread>
-#include<iostream>
+
 
 using namespace std;
 
@@ -32,12 +32,15 @@ void Clock::stop(){
     initialized = false;
 }
 void Clock::tick(){
+    if (!running) {
+        return;
+    }
     Kernel::incrementTicks();
 
-    uint64_t currentTick = Kernel::getTicks();
-    uint64_t timeMs = currentTick*100;
-
-    cout<<"Tick "<< currentTick << " at"<<timeMs<<"ms"<<endl;
+    if (running) {
+        Kernel::getInstance().getLogger().logHeartbeat();
+    }
+    
 }
 
 void Clock::clockLoop(){

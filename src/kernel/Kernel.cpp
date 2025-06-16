@@ -1,6 +1,7 @@
 #include "Kernel.h"
 #include "DeviceRegistry.h"
 #include "Clock.h"
+#include "Logger.h"
 #include <atomic>
 #include <cstdint>
 #include<iostream>
@@ -14,6 +15,7 @@ atomic<uint64_t> Kernel::tickCounter {0};
 Kernel::Kernel() : initialized(false){
     deviceRegistry = make_unique<DeviceRegistry>();
     systemClock = make_unique<Clock>();
+    logger = make_unique<Logger>();
 }
 
 Kernel::~Kernel(){
@@ -43,6 +45,12 @@ bool Kernel::initialize(){
 
     cout << "[BOOT] Device registry initialized" << endl;
 
+    if (!logger->initialize()) {
+        cout << "[BOOT] ERROR: Failed to initialize logger" <<endl;
+        return false;
+    }
+    cout << "[BOOT] Logger initialized" << endl;
+
     if (!systemClock->initialise()) {
         cout<<"[BOOT] ERROR: Failed to initialize system clock" <<endl;
     }
@@ -61,6 +69,9 @@ void Kernel::shutdown(){
 
     cout<<"[SHUTDOWN] cleaning up devices..."<<endl;
     deviceRegistry->cleanup();
+
+    cout<<"[SHUTDOWN] cleaning up logger..."<<endl;
+    logger->shutdown();
 
     initialized = false;
     cout<<"[SHUTDOWN] vOS shutdown complete"<<endl;
