@@ -1,8 +1,8 @@
 #include "Logger.h"
 #include "Kernel.h"
-#include <cstdint>
 #include<iostream>
 #include <mutex>
+#include <string>
 
 using namespace std;
 
@@ -27,25 +27,37 @@ void Logger::shutdown(){
     initialized = false;
 }
 
-void Logger::logHeartbeat(){
-    lock_guard<mutex> lock(logMutex);
-    if (!initialized || shuttingDown) {
-        return;
-    }
-    uint64_t currentTick = Kernel::getTicks();
-    cout<<"[Tick "<<currentTick<<"] System heartbeat"<<endl;
-    cout.flush();
-}
-
-void Logger::log(const string& message){
+void Logger::log(MessageType type, const string& message){
     lock_guard<mutex> lock(logMutex);
     if(!initialized || shuttingDown){
         return;
     }
-    cout<<message<<endl;
+    string formattedMessage = formatMessage(type,message);
+    cout<<formattedMessage<<endl;
+    if (type == MessageType::PROMPT) {
+        cout<<"> "<<flush;
+    }
+    else{
+        cout.flush();
+    }
 }
 
 bool Logger::isInitialized() {
     lock_guard<mutex> lock(logMutex);
     return initialized && !shuttingDown;
+}
+
+string Logger::formatMessage(MessageType type, const string& message) const {
+    switch (type) {
+        case MessageType::BOOT: return "[BOOT] " + message;
+        case MessageType::INFO: return "[INFO] " + message;
+        case MessageType::ERROR: return "[ERROR] " + message;
+        case MessageType::SHUTDOWN: return "[SHUTDOWN] " + message;
+        case MessageType::HEARTBEAT: return "[TICK " + to_string(Kernel::getTicks()) + "] " + message;
+        case MessageType::STATUS: return  message;
+        case MessageType::HEADER: return "\n=== " + message + " ===";
+        case MessageType::USER_FEEDBACK: return message;
+        case MessageType::PROMPT: return "";
+        default: return message;
+    }
 }

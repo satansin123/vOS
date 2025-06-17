@@ -6,45 +6,61 @@
 #include "kernel/Clock.h"
 #include "kernel/Logger.h"
 #include "kernel/InputMonitor.h"
+#include "scheduler/TCB.h"
 
 using namespace std;
 
-int main(int argc, char* argv[]){
-    cout<<"=== vOS - Virtual Operating system ==="<<endl;
-    cout<<"Runnning in: "<< (argc>1 ? argv[1] : "local")<<"environment"<<endl;
-    cout<<endl;
-
+int main(int argc, char* argv[]) {
     auto& kernel = Kernel::getInstance();
-
+    
     if (!kernel.initialize()) {
-        cerr<<"Failed to initialise kernel!"<<endl;
+        cerr << "Failed to initialise kernel!" << endl;  
         return 1;
     }
-    cout<<endl;
-    cout<<"===System Status==="<<endl;
-    cout<<"Kernel Initialised : " <<(kernel.isInitialized() ? "YES":"NO")<<endl;
-    cout << "Logger initialized: " << (kernel.getLogger().isInitialized() ? "YES" : "NO") <<endl;
-    cout << "Device count: " << kernel.getDeviceRegistry().getDeviceCount() << endl;
-    cout<<"Clock running: "<<(kernel.getClock().isRunning() ? "YES" : "NO")<<endl;
-    cout << "Current tick count: " << Kernel::getTicks() << endl;
-
-    cout << endl;
-    cout << "Real-time clock running... System will auto-tick every 100ms" << endl;
-    cout << "Type 'exit to shutdown the system' " << endl;
-    cout << endl;
-
+    
+    auto& logger = kernel.getLogger();
+    
+    logger.log(MessageType::HEADER, "vOS - Virtual Operating system");
+    logger.log(MessageType::INFO, "Running in: " + string(argc > 1 ? argv[1] : "local") + " environment");
+    
+    logger.log(MessageType::HEADER, "Testing TCB Implementation");
+    TCB testTask("TestLogger", Priority::MEDIUM, [&logger](){
+        logger.log(MessageType::INFO, "Hello from test task!");
+    });
+    
+    logger.log(MessageType::INFO, "Task: " + testTask.getName() + " (ID: " + to_string(testTask.getId()) + ")");
+    logger.log(MessageType::INFO, "Priority: " + testTask.getPriorityString());
+    logger.log(MessageType::INFO, "State: " + testTask.getStateString());
+    
+    testTask.setState(TaskState::RUNNING);
+    logger.log(MessageType::INFO, "After RUNNING: " + testTask.getStateString());
+    testTask.executeTask();
+    testTask.setState(TaskState::WAITING);
+    logger.log(MessageType::INFO, "After WAITING: " + testTask.getStateString());
+    
+    logger.log(MessageType::HEADER, "System Status");
+    logger.log(MessageType::STATUS, "Kernel Initialised: " + string(kernel.isInitialized() ? "YES" : "NO"));
+    logger.log(MessageType::STATUS, "Logger initialized: " + string(logger.isInitialized() ? "YES" : "NO"));
+    logger.log(MessageType::STATUS, "Device count: " + to_string(kernel.getDeviceRegistry().getDeviceCount()));
+    logger.log(MessageType::STATUS, "Clock running: " + string(kernel.getClock().isRunning() ? "YES" : "NO"));
+    logger.log(MessageType::STATUS, "Current tick count: " + to_string(Kernel::getTicks()));
+    
+    logger.log(MessageType::INFO, "Real-time clock running... System will auto-tick every 100ms");
+    logger.log(MessageType::INFO, "Type 'exit' to shutdown the system");
+    
     InputMonitor inputMonitor;
     inputMonitor.startMonitoring();
-
+    
     while (!inputMonitor.isShutdownRequested()) {
         this_thread::sleep_for(chrono::milliseconds(50));
     }
     
-    cout << endl;
-    cout << "Final tick count: " << Kernel::getTicks() << endl;
-    cout << "Shutting down system..." << endl;
+    logger.log(MessageType::INFO, "Final tick count: " + to_string(Kernel::getTicks()));
+    logger.log(MessageType::INFO, "Shutting down system...");
+    
+    inputMonitor.stopMonitoring();
     kernel.shutdown();
     
-    cout << "System halted." << endl;
+    logger.log(MessageType::INFO, "System halted.");
     return 0;
 }

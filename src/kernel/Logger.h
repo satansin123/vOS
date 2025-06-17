@@ -4,12 +4,24 @@
 #include<string>
 
 using namespace std;
-
+enum class MessageType{
+    BOOT,
+    INFO,
+    ERROR,
+    SHUTDOWN,
+    HEARTBEAT,
+    PROMPT,
+    STATUS,
+    HEADER,
+    USER_FEEDBACK
+};
 class Logger{
     private:
         atomic<bool> initialized;
         mutex logMutex;
         atomic<bool> shuttingDown;
+
+        string formatMessage(MessageType type, const string& message) const;
         
     public:
         Logger();
@@ -17,9 +29,8 @@ class Logger{
 
         bool initialize();
         void shutdown();
-
-        void logHeartbeat();
-        void log(const string& message);
+        void log(MessageType type,const string& message);
 
         bool isInitialized();
+
 };

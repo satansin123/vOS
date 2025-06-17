@@ -38,7 +38,7 @@ void Clock::tick(){
     Kernel::incrementTicks();
 
     if (running) {
-        Kernel::getInstance().getLogger().logHeartbeat();
+        Kernel::getInstance().getLogger().log(MessageType::HEARTBEAT, "System Heartbeat");
     }
     
 }

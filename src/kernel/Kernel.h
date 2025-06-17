@@ -23,7 +23,14 @@ class Kernel{
 
     public:
         ~Kernel();
-
+        
+        static constexpr const char* getVersion(){
+            return "1.0";
+        }
+        static constexpr const char* getName(){
+            return "vOS Kernel";
+        }
+        
         static Kernel& getInstance();
 
         Kernel(const Kernel&) = delete;
@@ -48,10 +55,4 @@ class Kernel{
             return *logger;
         }
 
-        static constexpr const char* getVersion(){
-            return "1.0";
-        }
-        static constexpr const char* getName(){
-            return "vOS Kernel";
-        }
 };

@@ -1,4 +1,6 @@
 #include "InputMonitor.h"
+#include"Kernel.h"
+#include "Logger.h"
 #include<string>
 #include<iostream>
 #include <thread>
@@ -32,14 +34,15 @@ void InputMonitor::startMonitoring(){
 void InputMonitor::inputLoop(){
     string command;
     while (monitoring) {
-        cout<<"> ";
+        Kernel::getInstance().getLogger().log(MessageType::PROMPT, "");
         getline(cin, command);
         if (command == "exit") {
             shutdownRequested = true;
             break;
         }
         if (!command.empty()) {
-            cout<<"This command is not applicable right now"<<endl;
+            Kernel::getInstance().getLogger().log(MessageType::USER_FEEDBACK, 
+                "Unknown command '" + command + "'. Type 'exit' to shutdown");
         }
     }
 }

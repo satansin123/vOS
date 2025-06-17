@@ -31,48 +31,45 @@ Kernel& Kernel::getInstance(){
     return *instance;
 }
 
-bool Kernel::initialize(){
-    if(initialized){
-        return true;
-    }
-
-    cout<<"[BOOT] "<<getName()<<" v"<<getVersion()<<" - Initialising..."<<endl;
-
-    if(!deviceRegistry->initialize()){
-        cout << "[BOOT] ERROR: Failed to initialize device registry" <<endl;
-        return false;
-    }
-
-    cout << "[BOOT] Device registry initialized" << endl;
+bool Kernel::initialize() {
+    if (initialized) return true;
 
     if (!logger->initialize()) {
-        cout << "[BOOT] ERROR: Failed to initialize logger" <<endl;
+        cerr << "[BOOT] ERROR: Failed to initialize logger" << endl;
         return false;
     }
-    cout << "[BOOT] Logger initialized" << endl;
 
-    if (!systemClock->initialise()) {
-        cout<<"[BOOT] ERROR: Failed to initialize system clock" <<endl;
+    logger->log(MessageType::BOOT, string(getName()) + " v" + getVersion() + " - Initialising...");
+    
+    if (!deviceRegistry->initialize()) {
+        logger->log(MessageType::ERROR, "Failed to initialize device registry");
+        return false;
     }
-    cout << "[BOOT] System clock initialized" << endl;
+    logger->log(MessageType::BOOT, "Device registry initialized");
+    
+    if (!systemClock->initialise()) {
+        logger->log(MessageType::ERROR, "Failed to initialize system clock");
+        return false;
+    }
+    logger->log(MessageType::BOOT, "System clock initialized");
+    
     initialized = true;
-    cout<< "[BOOT] vOS ready!"<<endl;
+    logger->log(MessageType::BOOT, "vOS ready!");
     return true;
 }
 
-void Kernel::shutdown(){
-    if(!initialized){
-        return;
-    }
-    cout << "[SHUTDOWN] Stopping system ticks..." << endl;
+void Kernel::shutdown() {
+    if (!initialized) return;
+    
+    logger->log(MessageType::SHUTDOWN, "Stopping system ticks...");
     systemClock->stop();
-
-    cout<<"[SHUTDOWN] cleaning up devices..."<<endl;
+    
+    logger->log(MessageType::SHUTDOWN, "cleaning up devices...");
     deviceRegistry->cleanup();
-
-    cout<<"[SHUTDOWN] cleaning up logger..."<<endl;
-    logger->shutdown();
-
+    
+    logger->log(MessageType::SHUTDOWN, "cleaning up logger...");
     initialized = false;
-    cout<<"[SHUTDOWN] vOS shutdown complete"<<endl;
+    
+    logger->log(MessageType::SHUTDOWN, "vOS shutdown complete");
+    logger->shutdown();
 }
