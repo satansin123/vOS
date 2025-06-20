@@ -7,6 +7,7 @@
 #include "kernel/Logger.h"
 #include "kernel/InputMonitor.h"
 #include "scheduler/TCB.h"
+#include "scheduler/Scheduler.h"
 
 using namespace std;
 
@@ -37,6 +38,44 @@ int main(int argc, char* argv[]) {
     testTask.executeTask();
     testTask.setState(TaskState::WAITING);
     logger.log(MessageType::INFO, "After WAITING: " + testTask.getStateString());
+
+    // Test Scheduler Registration System
+    logger.log(MessageType::HEADER, "Testing Task Registration System");
+
+    Scheduler scheduler;
+
+    // Create and register test tasks
+    auto task1 = make_unique<TCB>("BackgroundLogger", Priority::LOW, 
+        [&logger](){ logger.log(MessageType::INFO, "Background task executed"); });
+
+    auto task2 = make_unique<TCB>("SystemMonitor", Priority::HIGH, 
+        [&logger](){ logger.log(MessageType::INFO, "System monitoring task executed"); });
+
+    auto task3 = make_unique<TCB>("DataProcessor", Priority::MEDIUM, 
+        [&logger](){ logger.log(MessageType::INFO, "Data processing task executed"); });
+
+    // Register tasks
+    bool result1 = scheduler.registerTask(std::move(task1));
+    bool result2 = scheduler.registerTask(std::move(task2));
+    bool result3 = scheduler.registerTask(std::move(task3));
+
+    logger.log(MessageType::INFO, "Registration results: " + to_string(result1) + ", " + to_string(result2) + ", " + to_string(result3));
+
+    // Test duplicate prevention
+    auto duplicate = make_unique<TCB>("BackgroundLogger", Priority::MEDIUM, 
+        [](){ /* duplicate task */ });
+
+    if (!scheduler.registerTask(std::move(duplicate))) {
+        logger.log(MessageType::INFO, "Duplicate prevention working correctly");
+    }
+
+    // Display registered tasks and statistics
+    scheduler.getAllRegisteredTasks();
+    scheduler.getRegistrationStats();
+    scheduler.displayTaskSummary();
+
+    logger.log(MessageType::STATUS, "Total registered tasks: " + to_string(scheduler.getNumberOfRegisteredTasks()));
+
     
     logger.log(MessageType::HEADER, "System Status");
     logger.log(MessageType::STATUS, "Kernel Initialised: " + string(kernel.isInitialized() ? "YES" : "NO"));
