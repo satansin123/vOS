@@ -4,7 +4,7 @@
 #include<chrono>
 
 using namespace std;
-
+class Scheduler;
 class Clock{
     private:
         atomic<bool> running;

@@ -1,6 +1,7 @@
 #include "InputMonitor.h"
 #include"Kernel.h"
 #include "Logger.h"
+#include <chrono>
 #include<string>
 #include<iostream>
 #include <thread>
@@ -35,6 +36,13 @@ void InputMonitor::inputLoop(){
     string command;
     while (monitoring) {
         Kernel::getInstance().getLogger().log(MessageType::PROMPT, "");
+        if (cin.eof() || !cin.good() ) {
+            Kernel::getInstance().getLogger().log(MessageType::INFO, 
+                "Non-interactive environment detected. Running for 10 seconds...");
+            this_thread::sleep_for(chrono::seconds(10));
+            shutdownRequested =true;
+            break;
+        }
         getline(cin, command);
         if (command == "exit") {
             shutdownRequested = true;

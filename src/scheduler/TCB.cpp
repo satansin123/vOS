@@ -2,6 +2,7 @@
 #include "TaskTypes.h"
 #include <exception>
 #include <mutex>
+#include <sys/stat.h>
 
 using namespace std;
 
@@ -11,6 +12,9 @@ bool TCB::setState(TaskState newState){
         return false;
     }
     state = newState;
+    if (newState == TaskState::WAITING) {
+        resetWaitTimers();
+    }
     return true;
 }
 
@@ -56,4 +60,19 @@ string TCB::getPriorityString() const {
         case Priority::HIGH: return "HIGH";
         default: return "UNKNOWN";
     }
+}
+
+
+bool TCB::decrementWaitTimer(){
+    lock_guard<mutex> lock(tcbMutex);
+    if (state != TaskState::WAITING) {
+        return false;
+    }
+    currentWaitTicks++;
+    if (currentWaitTicks>=waitTicks) {
+        state = TaskState::READY;
+        currentWaitTicks = 0;
+        return true;
+    }
+    return false;
 }

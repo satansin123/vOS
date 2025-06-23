@@ -6,6 +6,7 @@
 #include <cstdint>
 #include<iostream>
 #include <memory>
+#include "../scheduler/Scheduler.h"
 
 using namespace std;
 
@@ -16,6 +17,7 @@ Kernel::Kernel() : initialized(false){
     deviceRegistry = make_unique<DeviceRegistry>();
     systemClock = make_unique<Clock>();
     logger = make_unique<Logger>();
+    scheduler = make_unique<Scheduler>();
 }
 
 Kernel::~Kernel(){
@@ -46,6 +48,8 @@ bool Kernel::initialize() {
         return false;
     }
     logger->log(MessageType::BOOT, "Device registry initialized");
+    
+    logger->log(MessageType::BOOT, "Scheduler initialized");
     
     if (!systemClock->initialise()) {
         logger->log(MessageType::ERROR, "Failed to initialize system clock");

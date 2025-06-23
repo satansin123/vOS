@@ -1,13 +1,9 @@
 #pragma once
-#include <cstddef>
-#include <cstdint>
+#include <string>
 #include <functional>
-#include<string>
+#include <mutex>
 #include "TaskTypes.h"
 #include "TaskManager.h"
-#include<mutex>
-#include "../kernel/Kernel.h"
-#include "../kernel/Logger.h"
 
 using namespace std;
 
@@ -20,13 +16,21 @@ class TCB{
         function<void()> taskCallback;
         bool isValidTransition(TaskState from, TaskState to);
         mutex tcbMutex;
+
+        int waitTicks;
+        int currentWaitTicks;
+
+        bool enableCountDownLogging;
     
     public:
-        TCB(const string& name, Priority priority, function<void()> callback) : taskId(TaskManager::generateTaskId()) , 
+        TCB(const string& name, Priority priority, function<void()> callback, int waitPeriod = 0) : taskId(TaskManager::generateTaskId()) , 
                                                                                 taskName(name), 
                                                                                 priority(priority), 
                                                                                 state(TaskState::READY),
-                                                                                taskCallback(callback) {}
+                                                                                taskCallback(callback),
+                                                                                waitTicks(waitPeriod),
+                                                                                currentWaitTicks(0) {}
+
         uint32_t getId() const {return taskId;}
         const string& getName() const {return taskName;}
 
@@ -42,4 +46,13 @@ class TCB{
         string getPriorityString() const;
 
         bool executeTask();
+
+        void setWaitTicks(int ticks) {waitTicks = ticks;}
+        int getWaitTicks(){return waitTicks;}
+        void resetWaitTimers(){currentWaitTicks=0;}
+        bool decrementWaitTimer();
+        int getCurrentWaitTicks() const {return currentWaitTicks;}
+
+        bool isCountDownLoggingEnabled(){return enableCountDownLogging;}
+        void enableTimerCountdown(bool enable){enableCountDownLogging = enable;}
 };

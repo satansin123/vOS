@@ -2,12 +2,13 @@
 #include <atomic>
 #include <cstdint>
 #include <memory>
-
+#include "../scheduler/Scheduler.h"
 using namespace std;
 
 class DeviceRegistry;
 class Clock;
 class Logger;
+class Scheduler;
 
 class Kernel{
     private:
@@ -17,6 +18,7 @@ class Kernel{
         unique_ptr<DeviceRegistry> deviceRegistry;
         unique_ptr<Clock> systemClock;
         unique_ptr<Logger> logger;
+        unique_ptr<Scheduler> scheduler;
         bool initialized;
 
         Kernel();
@@ -53,6 +55,9 @@ class Kernel{
         }
         Logger& getLogger() const{
             return *logger;
+        }
+        Scheduler& getScheduler() const{
+            return *scheduler;
         }
 
 };

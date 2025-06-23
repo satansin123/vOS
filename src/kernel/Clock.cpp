@@ -3,7 +3,7 @@
 #include "Logger.h"
 #include <chrono>
 #include <thread>
-
+#include "../scheduler/Scheduler.h"
 
 using namespace std;
 
@@ -31,16 +31,22 @@ void Clock::stop(){
     }
     initialized = false;
 }
-void Clock::tick(){
-    if (!running) {
-        return;
-    }
+void Clock::tick() {
+    if (!running) return;
+    
+    // Critical missing component
     Kernel::incrementTicks();
+    
+    Scheduler& scheduler = Kernel::getInstance().getScheduler();
+    scheduler.updateTaskTimers();       
+    scheduler.executeNextReadyTask();  
 
     if (running) {
-        Kernel::getInstance().getLogger().log(MessageType::HEARTBEAT, "System Heartbeat");
+        Kernel::getInstance().getLogger().log(
+            MessageType::HEARTBEAT, 
+            "System heartbeat - Tick " + to_string(Kernel::getTicks())
+        );
     }
-    
 }
 
 void Clock::clockLoop(){
