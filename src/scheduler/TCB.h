@@ -1,4 +1,5 @@
 #pragma once
+#include <chrono>
 #include <string>
 #include <functional>
 #include <mutex>
@@ -21,6 +22,10 @@ class TCB{
         int currentWaitTicks;
 
         bool enableCountDownLogging;
+        int timerActivations;
+        chrono::steady_clock::time_point lastActivationTime;
+        chrono::milliseconds totalWaitTIme;
+        bool timerPaused;
     
     public:
         TCB(const string& name, Priority priority, function<void()> callback, int waitPeriod = 0) : taskId(TaskManager::generateTaskId()) , 
@@ -47,7 +52,13 @@ class TCB{
 
         bool executeTask();
 
-        void setWaitTicks(int ticks) {waitTicks = ticks;}
+        bool setWaitTicks(int ticks) {
+            if (ticks<=0) {
+                return false;
+            }
+            waitTicks = ticks;
+            return true;
+        }
         int getWaitTicks(){return waitTicks;}
         void resetWaitTimers(){currentWaitTicks=0;}
         bool decrementWaitTimer();
@@ -55,4 +66,23 @@ class TCB{
 
         bool isCountDownLoggingEnabled(){return enableCountDownLogging;}
         void enableTimerCountdown(bool enable){enableCountDownLogging = enable;}
+
+        int getTimerActivations() const {return timerActivations;}
+        chrono::milliseconds getTotalWaitTime() const {return totalWaitTIme;}
+
+        float getAvgWaitTime() const {
+            return timerActivations>0 ? static_cast<float>(totalWaitTIme.count()) / timerActivations : 0.0f;
+        }
+        void incrementActivation();
+
+        bool isTimerPaused(){
+            return timerPaused;
+        }
+        void pauseTimer(){
+            timerPaused = true;
+        }
+        void resumeTimer(){
+            timerPaused = false;
+        }
+        
 };

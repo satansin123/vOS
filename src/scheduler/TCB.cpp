@@ -76,3 +76,12 @@ bool TCB::decrementWaitTimer(){
     }
     return false;
 }
+void TCB::incrementActivation(){
+            timerActivations++;
+            auto now = chrono::steady_clock::now();
+
+            if (lastActivationTime != chrono::steady_clock::time_point{}) {
+                totalWaitTIme+=chrono::duration_cast<chrono::milliseconds>(now-lastActivationTime);
+            }
+            lastActivationTime = now;
+        }

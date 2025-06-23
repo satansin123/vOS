@@ -338,3 +338,80 @@ vector<string> Scheduler::getReadyTasksInOrder() const {
     
     return readyTasks;
 }
+
+void Scheduler::displayTimerStatistics() const{
+    lock_guard<mutex> lock(schedulerMutex);
+    Kernel::getInstance().getLogger().log(MessageType::HEADER, "Timer System Statistics");
+    int totalActivations = 0;
+    float totalAvgWait = 0.0f;
+    for (const auto& pair : registeredTasks) {
+        int activations = pair.second->getTimerActivations();
+        float avgWait = pair.second->getAvgWaitTime();
+
+        Kernel::getInstance().getLogger().log(MessageType::STATUS, pair.first+": "+
+                                                to_string(activations) + " activations," +
+                                            "avg wait: "+to_string(avgWait) + "ms");
+        totalActivations+=activations;
+        totalActivations+=avgWait;
+    }
+    Kernel::getInstance().getLogger().log(MessageType::STATUS, 
+        "Total activations: " + to_string(totalActivations));
+    Kernel::getInstance().getLogger().log(MessageType::STATUS, 
+        "System average wait: " + to_string(totalAvgWait / registeredTasks.size()) + "ms");
+}
+
+pair<string, int> Scheduler::getMostActiveTask() const{
+    lock_guard<mutex> lock(schedulerMutex);
+
+    string mostActive = "";
+    int maxActivations = 0;
+    for (const auto& pair : registeredTasks) {
+        int activation = pair.second->getTimerActivations();
+        if(activation>maxActivations){
+            mostActive = pair.first;
+            maxActivations = activation;
+        }
+    }
+    return make_pair(mostActive, maxActivations);
+}
+
+bool Scheduler::adjustTaskTimer(const string& taskName, int newPeriod){
+    lock_guard<mutex> lock(schedulerMutex);
+
+    if (newPeriod<=0) {
+        Kernel::getInstance().getLogger().log(MessageType::ERROR, "[TIMER] Invalid period " + to_string(newPeriod) + " for " + taskName);
+        return false;
+    }
+    auto it = registeredTasks.find(taskName);
+    if (it!=registeredTasks.end()) {
+        it->second->setWaitTicks(newPeriod);
+        Kernel::getInstance().getLogger().log(MessageType::INFO, 
+            "[TIMER] " + taskName + " period adjusted to " + to_string(newPeriod) + " ticks");
+        return true;
+    }
+    return false;
+}
+
+bool Scheduler::pauseTaskTimer(const string& taskName){
+    lock_guard<mutex> lock(schedulerMutex);
+    auto it = registeredTasks.find(taskName);
+    if (it!= registeredTasks.end()) {
+        it->second->pauseTimer();
+        Kernel::getInstance().getLogger().log(MessageType::INFO, 
+            "[TIMER] " + taskName + " timer paused");
+        return true;
+    }
+    return false;
+}
+
+bool Scheduler::resumeTaskTimer(const string& taskName){
+    lock_guard<mutex> lock(schedulerMutex);
+    auto it = registeredTasks.find(taskName);
+    if (it!=registeredTasks.end()) {
+        it->second->resumeTimer();
+        Kernel::getInstance().getLogger().log(MessageType::INFO, 
+            "[TIMER] " + taskName + " timer resumed");
+        return true;
+    }
+    return false;
+}

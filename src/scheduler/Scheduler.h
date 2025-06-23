@@ -5,6 +5,7 @@
 #include<string>
 #include<memory>
 #include<mutex>
+#include <utility>
 #include <vector>
 using namespace std;
 
@@ -34,4 +35,14 @@ class Scheduler{
             string getNextTaskToExecute(vector<string> taskReady) const;
 
             void updateTaskTimers();
+
+            void displayTimerStatistics() const;
+            pair<string, int> getMostActiveTask()const;
+            float getAvgTimerAccuracy () const;
+            int getTotalTimerActivations() const;
+
+            bool adjustTaskTimer(const string& taskName, int newPeriod);
+            bool pauseTaskTimer(const string& taskName);
+            bool resumeTaskTimer(const string& taskName);
+            vector<pair<string, pair<int, int>>> getTimerStatus() const;
 };
