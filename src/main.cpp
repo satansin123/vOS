@@ -46,17 +46,17 @@ int main(int argc, char* argv[]) {
         logger.log(MessageType::INFO, "Hello from test task!");
     }, 50);
 
-    logger.log(MessageType::INFO, "✅ TCB Created: " + testTask.getName() + " (ID: " + to_string(testTask.getId()) + ")");
-    logger.log(MessageType::INFO, "✅ Priority: " + testTask.getPriorityString());
-    logger.log(MessageType::INFO, "✅ Initial State: " + testTask.getStateString());
+    logger.log(MessageType::INFO, "TCB Created: " + testTask.getName() + " (ID: " + to_string(testTask.getId()) + ")");
+    logger.log(MessageType::INFO, "Priority: " + testTask.getPriorityString());
+    logger.log(MessageType::INFO, "Initial State: " + testTask.getStateString());
 
     // Test state transitions
     testTask.setState(TaskState::RUNNING);
-    logger.log(MessageType::INFO, "✅ State transition to RUNNING: " + testTask.getStateString());
+    logger.log(MessageType::INFO, "State transition to RUNNING: " + testTask.getStateString());
     testTask.executeTask();
     testTask.setState(TaskState::WAITING);
-    logger.log(MessageType::INFO, "✅ State transition to WAITING: " + testTask.getStateString());
-    logger.log(MessageType::INFO, "✅ Task 2.1 Complete: TCB with state management and callback execution");
+    logger.log(MessageType::INFO, "State transition to WAITING: " + testTask.getStateString());
+    logger.log(MessageType::INFO, "Task 2.1 Complete: TCB with state management and callback execution");
 
     // ================================================================
     // Task 2.2: Dynamic Task Registry Implementation
@@ -94,50 +94,50 @@ int main(int argc, char* argv[]) {
     bool result2 = scheduler.registerTask(std::move(systemMonitor));
     bool result3 = scheduler.registerTask(std::move(dataProcessor));
 
-    logger.log(MessageType::INFO, "✅ BackgroundLogger registration: " + string(result1 ? "SUCCESS" : "FAILED"));
-    logger.log(MessageType::INFO, "✅ SystemMonitor registration: " + string(result2 ? "SUCCESS" : "FAILED"));
-    logger.log(MessageType::INFO, "✅ DataProcessor registration: " + string(result3 ? "SUCCESS" : "FAILED"));
+    logger.log(MessageType::INFO, "BackgroundLogger registration: " + string(result1 ? "SUCCESS" : "FAILED"));
+    logger.log(MessageType::INFO, "SystemMonitor registration: " + string(result2 ? "SUCCESS" : "FAILED"));
+    logger.log(MessageType::INFO, "DataProcessor registration: " + string(result3 ? "SUCCESS" : "FAILED"));
 
     // Test duplicate prevention
     auto duplicate = make_unique<TCB>("BackgroundLogger", Priority::MEDIUM, []() {});
     if (!scheduler.registerTask(std::move(duplicate))) {
-        logger.log(MessageType::INFO, "✅ Duplicate prevention working correctly");
+        logger.log(MessageType::INFO, "Duplicate prevention working correctly");
     }
 
     // Display registry status
     scheduler.getAllRegisteredTasks();
     scheduler.getRegistrationStats();
     scheduler.displayTaskSummary();
-    logger.log(MessageType::INFO, "✅ Task 2.2 Complete: Dynamic registry with " + 
+    logger.log(MessageType::INFO, "Task 2.2 Complete: Dynamic registry with " + 
                to_string(scheduler.getNumberOfRegisteredTasks()) + " registered tasks");
 
     // ================================================================
     // Task 2.3: Round-Robin Scheduler Demonstration
     // ================================================================
     logger.log(MessageType::HEADER, "Task 2.3: Round-Robin Scheduler");
-    logger.log(MessageType::INFO, "✅ Scheduler integrated with kernel and clock system");
-    logger.log(MessageType::INFO, "✅ Round-robin execution: tasks execute in fair rotation");
-    logger.log(MessageType::INFO, "✅ State transitions: READY → RUNNING → WAITING");
-    logger.log(MessageType::INFO, "✅ Single-task execution: one task per tick");
+    logger.log(MessageType::INFO, "Scheduler integrated with kernel and clock system");
+    logger.log(MessageType::INFO, "Round-robin execution: tasks execute in fair rotation");
+    logger.log(MessageType::INFO, "State transitions: READY → RUNNING → WAITING");
+    logger.log(MessageType::INFO, "Single-task execution: one task per tick");
 
     // ================================================================
     // Task 2.4: Timer Wake-up System Demonstration  
     // ================================================================
     logger.log(MessageType::HEADER, "Task 2.4: Timer Wake-up System");
-    logger.log(MessageType::INFO, "✅ Per-task timer tracking implemented");
-    logger.log(MessageType::INFO, "✅ Automatic WAITING → READY transitions");
-    logger.log(MessageType::INFO, "✅ BackgroundLogger: 5-tick timer period");
-    logger.log(MessageType::INFO, "✅ SystemMonitor: 3-tick timer period");
-    logger.log(MessageType::INFO, "✅ DataProcessor: 4-tick timer period");
+    logger.log(MessageType::INFO, "Per-task timer tracking implemented");
+    logger.log(MessageType::INFO, "Automatic WAITING → READY transitions");
+    logger.log(MessageType::INFO, "BackgroundLogger: 5-tick timer period");
+    logger.log(MessageType::INFO, "SystemMonitor: 3-tick timer period");
+    logger.log(MessageType::INFO, "DataProcessor: 4-tick timer period");
 
     // ================================================================
     // Task 2.5: Background Logger Demonstration
     // ================================================================
     logger.log(MessageType::HEADER, "Task 2.5: Background Logger Task");
-    logger.log(MessageType::INFO, "✅ Background logger logs every 5 system ticks");
-    logger.log(MessageType::INFO, "✅ Demonstrates scheduler functionality");
-    logger.log(MessageType::INFO, "✅ Integration with timer system");
-    logger.log(MessageType::INFO, "✅ Automatic scheduling cycle");
+    logger.log(MessageType::INFO, "Background logger logs every 5 system ticks");
+    logger.log(MessageType::INFO, "Demonstrates scheduler functionality");
+    logger.log(MessageType::INFO, "Integration with timer system");
+    logger.log(MessageType::INFO, "Automatic scheduling cycle");
 
     // ================================================================
     // System Status and Integration Verification
@@ -233,11 +233,11 @@ int main(int argc, char* argv[]) {
     // Task 2 Completion Summary
     // ================================================================
     logger.log(MessageType::HEADER, "Task 2 - Cooperative Scheduler Summary");
-    logger.log(MessageType::INFO, "✅ Task 2.1: TCB with state management, priorities, and callbacks");
-    logger.log(MessageType::INFO, "✅ Task 2.2: Dynamic task registry with validation and lookup");
-    logger.log(MessageType::INFO, "✅ Task 2.3: Round-robin scheduler with fair execution");
-    logger.log(MessageType::INFO, "✅ Task 2.4: Timer system with automatic task reactivation");
-    logger.log(MessageType::INFO, "✅ Task 2.5: Background logger demonstrating system integration");
+    logger.log(MessageType::INFO, "Task 2.1: TCB with state management, priorities, and callbacks");
+    logger.log(MessageType::INFO, "Task 2.2: Dynamic task registry with validation and lookup");
+    logger.log(MessageType::INFO, "Task 2.3: Round-robin scheduler with fair execution");
+    logger.log(MessageType::INFO, "Task 2.4: Timer system with automatic task reactivation");
+    logger.log(MessageType::INFO, "Task 2.5: Background logger demonstrating system integration");
     logger.log(MessageType::INFO, "");
     logger.log(MessageType::INFO, "🏆 TASK 2 COMPLETE: Cooperative Scheduler fully implemented!");
     logger.log(MessageType::INFO, "");
