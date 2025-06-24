@@ -72,10 +72,11 @@ void Scheduler::getAllRegisteredTasks() const{
         const string& name = it.first;
         const unique_ptr<TCB>& task = it.second;
 
-        Kernel::getInstance().getLogger().log(MessageType::INFO, "Task: " + name + 
-                                                                                " (ID: " + to_string(task->getId()) + 
-                                                                                ", Priority: " + task->getPriorityString() + 
-                                                                                ", State: " + task->getStateString() + ")");
+        Kernel::getInstance().getLogger().log(MessageType::INFO, 
+                                            "Task: " + name + 
+                                                    " (ID: " + to_string(task->getId()) + 
+                                                    ", Priority: " + task->getPriorityString() + 
+                                                    ", State: " + task->getStateString() + ")");
         
     }
 }
@@ -219,69 +220,24 @@ void Scheduler::displayTaskSummary() const {
     }
 }
 
-bool Scheduler::executeNextReadyTask(){
-    lock_guard<mutex> lock(schedulerMutex);
-    
-    vector<string> readyTasks = getReadyTasksInOrder();
-    if(readyTasks.empty()){
-        Kernel::getInstance().getLogger().log(MessageType::INFO, "[SCHEDULER] No READY tasks available for execution");
-        return false;
-    }
-    
-    string taskToExecute = getNextTaskToExecute(readyTasks);
-    
-    // Find task WITHOUT calling findTaskByName (avoid deadlock)
-    auto it = registeredTasks.find(taskToExecute);
-    if(it == registeredTasks.end()){
-        return false;
-    }
-    
-    TCB* task = it->second.get();
-    
-    Kernel::getInstance().getLogger().log(MessageType::INFO, "[SCHEDULER] Executing " + taskToExecute + " (READY -> RUNNING)");
-    
-    if(!task->setState(TaskState::RUNNING)){
-        Kernel::getInstance().getLogger().log(MessageType::ERROR, "[SCHEDULER] Failed to transition " + taskToExecute + " to RUNNING state");
-        return false;
-    }
-    
-    bool executionSuccess = task->executeTask();
-    
-    if(executionSuccess){
-        Kernel::getInstance().getLogger().log(MessageType::INFO, "[SCHEDULER] " + taskToExecute + " completed successfully");
-    } else {
-        Kernel::getInstance().getLogger().log(MessageType::ERROR, "[SCHEDULER] " + taskToExecute + " execution failed");
-    }
-    
-    if(!task->setState(TaskState::WAITING)){
-        Kernel::getInstance().getLogger().log(MessageType::ERROR, "[SCHEDULER] Failed to transition " + taskToExecute + " to WAITING state");
-    } else {
-        Kernel::getInstance().getLogger().log(MessageType::INFO, "[SCHEDULER] " + taskToExecute + " complete (RUNNING -> WAITING)");
-    }
-    
-    lastExecutedTask = taskToExecute;
-    return executionSuccess;
-}
+//round-robin, prioirty based execution logic
 
-
-void Scheduler::runSchedulingCycle(){
-    lock_guard<mutex> lock(schedulerMutex);
-    vector<string> readyTasks = getTaskNamesByState(TaskState::READY);
-
-    if (readyTasks.empty()) {
-        Kernel::getInstance().getLogger().log(MessageType::INFO, "[SCHEDULER] No READY tasks available for execution");
-    }
-    Kernel::getInstance().getLogger().log(MessageType::HEADER, "Starting Scheduling Cycle - "+ to_string(readyTasks.size()) + " READY tasks");
-    lock.~lock_guard();
-    int taskExecuted = 0;
-    for (const string& _ : readyTasks) {
-        if (executeNextReadyTask()) {
-            taskExecuted++;
+vector<string> Scheduler::getReadyTasksInOrder() const {
+    vector<string> readyTasks;
+    
+    for (const auto& pair : registeredTasks) {
+        if (pair.second->getState() == TaskState::READY) {
+            readyTasks.push_back(pair.first);
         }
-    } 
-    Kernel::getInstance().getLogger().log(MessageType::INFO, 
-        "[SCHEDULER] Scheduling cycle complete - " + to_string(taskExecuted) + 
-        " tasks executed");   
+    }
+    
+    // sorting based on priority
+    sort(readyTasks.begin(), readyTasks.end(), [this] (const string& a, const string& b){
+        auto taskA = registeredTasks.at(a).get();
+        auto taskB = registeredTasks.at(b).get();
+        return static_cast<int>(taskA->getPriority()) > static_cast<int>(taskB->getPriority());
+    }  );
+    return readyTasks;
 }
 
 string Scheduler::getNextTaskToExecute(vector<string> taskReady) const {
@@ -301,43 +257,70 @@ string Scheduler::getNextTaskToExecute(vector<string> taskReady) const {
     }
     return *nextTask;
 }
+bool Scheduler::executeNextReadyTask(){
+    lock_guard<mutex> lock(schedulerMutex);
+    
+    vector<string> readyTasks = getReadyTasksInOrder();
+    if(readyTasks.empty()){
+        Kernel::getInstance().getLogger().log(MessageType::SCHEDULER, "No READY tasks available for execution");
+        return false;
+    }
+    
+    string taskToExecute = getNextTaskToExecute(readyTasks);
+    
+    auto it = registeredTasks.find(taskToExecute);
+    if(it == registeredTasks.end()){
+        return false;
+    }
+    
+    TCB* task = it->second.get();
+    
+    Kernel::getInstance().getLogger().log(MessageType::SCHEDULER, "Executing " + taskToExecute + " (READY -> RUNNING)");
+    
+    if(!task->setState(TaskState::RUNNING)){
+        Kernel::getInstance().getLogger().log(MessageType::ERROR, "Failed to transition " + taskToExecute + " to RUNNING state");
+        return false;
+    }
+    
+    bool executionSuccess = task->executeTask();
+    
+    if(executionSuccess){
+        Kernel::getInstance().getLogger().log(MessageType::SCHEDULER,  taskToExecute + " completed successfully");
+    } else {
+        Kernel::getInstance().getLogger().log(MessageType::ERROR,  taskToExecute + " execution failed");
+    }
+    
+    if(!task->setState(TaskState::WAITING)){
+        Kernel::getInstance().getLogger().log(MessageType::ERROR, "Failed to transition " + taskToExecute + " to WAITING state");
+    } else {
+        Kernel::getInstance().getLogger().log(MessageType::SCHEDULER,  taskToExecute + " complete (RUNNING -> WAITING)");
+    }
+    
+    lastExecutedTask = taskToExecute;
+    return executionSuccess;
+}
+
 
 void Scheduler::updateTaskTimers() {
     lock_guard<mutex> lock(schedulerMutex);
     
     for(auto& pair : registeredTasks) {
         if(pair.second->getState() == TaskState::WAITING) {
-            
-            // Show countdown progress if enabled
             if(pair.second->isCountDownLoggingEnabled()) {
                 int remaining = pair.second->getWaitTicks() - pair.second->getCurrentWaitTicks();
-                Kernel::getInstance().getLogger().log(MessageType::INFO, 
-                    "[TIMER] " + pair.first + " countdown: " + to_string(remaining) + " ticks remaining");
+                Kernel::getInstance().getLogger().log(MessageType::TIMER, 
+                     pair.first + " countdown: " + to_string(remaining) + " ticks remaining");
             }
             
-            if(pair.second->decrementWaitTimer()) {
-                Kernel::getInstance().getLogger().log(MessageType::INFO, 
-                    "[TIMER] " + pair.first + " timer expired (WAITING -> READY)");
+            if(pair.second->incrementCurrentWaitTimer()) {
+                Kernel::getInstance().getLogger().log(MessageType::TIMER, 
+                     pair.first + " timer expired (WAITING -> READY)");
             }
         }
     }
 }
 
-vector<string> Scheduler::getReadyTasksInOrder() const {
-    vector<string> readyTasks;
-    
-    // Get all ready tasks
-    for (const auto& pair : registeredTasks) {
-        if (pair.second->getState() == TaskState::READY) {
-            readyTasks.push_back(pair.first);
-        }
-    }
-    
-    // Sort for consistent ordering
-    sort(readyTasks.begin(), readyTasks.end());
-    
-    return readyTasks;
-}
+//statictics
 
 void Scheduler::displayTimerStatistics() const{
     lock_guard<mutex> lock(schedulerMutex);
@@ -379,14 +362,14 @@ bool Scheduler::adjustTaskTimer(const string& taskName, int newPeriod){
     lock_guard<mutex> lock(schedulerMutex);
 
     if (newPeriod<=0) {
-        Kernel::getInstance().getLogger().log(MessageType::ERROR, "[TIMER] Invalid period " + to_string(newPeriod) + " for " + taskName);
+        Kernel::getInstance().getLogger().log(MessageType::ERROR, "Invalid period " + to_string(newPeriod) + " for " + taskName);
         return false;
     }
     auto it = registeredTasks.find(taskName);
     if (it!=registeredTasks.end()) {
         it->second->setWaitTicks(newPeriod);
-        Kernel::getInstance().getLogger().log(MessageType::INFO, 
-            "[TIMER] " + taskName + " period adjusted to " + to_string(newPeriod) + " ticks");
+        Kernel::getInstance().getLogger().log(MessageType::TIMER, 
+            taskName + " period adjusted to " + to_string(newPeriod) + " ticks");
         return true;
     }
     return false;
@@ -397,8 +380,8 @@ bool Scheduler::pauseTaskTimer(const string& taskName){
     auto it = registeredTasks.find(taskName);
     if (it!= registeredTasks.end()) {
         it->second->pauseTimer();
-        Kernel::getInstance().getLogger().log(MessageType::INFO, 
-            "[TIMER] " + taskName + " timer paused");
+        Kernel::getInstance().getLogger().log(MessageType::TIMER, 
+             taskName + " timer paused");
         return true;
     }
     return false;
@@ -409,8 +392,8 @@ bool Scheduler::resumeTaskTimer(const string& taskName){
     auto it = registeredTasks.find(taskName);
     if (it!=registeredTasks.end()) {
         it->second->resumeTimer();
-        Kernel::getInstance().getLogger().log(MessageType::INFO, 
-            "[TIMER] " + taskName + " timer resumed");
+        Kernel::getInstance().getLogger().log(MessageType::TIMER, 
+             taskName + " timer resumed");
         return true;
     }
     return false;

@@ -13,12 +13,13 @@ class Scheduler;
 class Kernel{
     private:
         static unique_ptr<Kernel> instance;
-        static atomic<uint64_t> tickCounter;
+        static atomic<uint64_t> kernelTickCounter;
 
         unique_ptr<DeviceRegistry> deviceRegistry;
         unique_ptr<Clock> systemClock;
         unique_ptr<Logger> logger;
         unique_ptr<Scheduler> scheduler;
+
         bool initialized;
 
         Kernel();
@@ -42,9 +43,9 @@ class Kernel{
         void shutdown();
         bool isInitialized(){return initialized;}
 
-        static uint64_t getTicks() {return tickCounter;}
+        static uint64_t getTicks() {return kernelTickCounter;}
         static void incrementTicks(){
-            tickCounter.fetch_add(1);
+            kernelTickCounter.fetch_add(1);
         }
 
         DeviceRegistry& getDeviceRegistry() const {

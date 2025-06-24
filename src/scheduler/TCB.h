@@ -10,14 +10,17 @@ using namespace std;
 
 class TCB{
     private:
+        //important tcb parameters
         uint32_t taskId;
         string taskName;
         Priority priority;
         TaskState state;
         function<void()> taskCallback;
-        bool isValidTransition(TaskState from, TaskState to);
+
         mutex tcbMutex;
 
+        //waitTicks - the number of ticks this task has to wait to execute
+        //currentWaitTicks - the number of ticks that have passed
         int waitTicks;
         int currentWaitTicks;
 
@@ -28,7 +31,8 @@ class TCB{
         bool timerPaused;
     
     public:
-        TCB(const string& name, Priority priority, function<void()> callback, int waitPeriod = 0) : taskId(TaskManager::generateTaskId()) , 
+        TCB(const string& name, Priority priority, function<void()> callback, int waitPeriod = 0) : 
+                                                                                taskId(TaskManager::generateTaskId()) , 
                                                                                 taskName(name), 
                                                                                 priority(priority), 
                                                                                 state(TaskState::READY),
@@ -41,6 +45,7 @@ class TCB{
 
         bool setState(TaskState newState);
         TaskState getState() const {return state;}
+        bool isValidTransition(TaskState from, TaskState to);
 
         Priority getPriority() const {return priority;}
         void setPriority(Priority newPriority) {priority = newPriority;}
@@ -50,7 +55,7 @@ class TCB{
         string getStateString() const ;
         string getPriorityString() const;
 
-        bool executeTask();
+        bool executeTask() const;
 
         bool setWaitTicks(int ticks) {
             if (ticks<=0) {
@@ -61,7 +66,7 @@ class TCB{
         }
         int getWaitTicks(){return waitTicks;}
         void resetWaitTimers(){currentWaitTicks=0;}
-        bool decrementWaitTimer();
+        bool incrementCurrentWaitTimer();
         int getCurrentWaitTicks() const {return currentWaitTicks;}
 
         bool isCountDownLoggingEnabled(){return enableCountDownLogging;}

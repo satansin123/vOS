@@ -33,8 +33,6 @@ void Clock::stop(){
 }
 void Clock::tick() {
     if (!running) return;
-    
-    // Critical missing component
     Kernel::incrementTicks();
     
     Scheduler& scheduler = Kernel::getInstance().getScheduler();

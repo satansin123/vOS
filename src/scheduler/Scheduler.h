@@ -8,18 +8,17 @@
 #include <utility>
 #include <vector>
 
-#define MAX_TIMER_VALUE 1000
 using namespace std;
 
 class Scheduler{
     private:
         unordered_map<string, unique_ptr<TCB>> registeredTasks;
         mutable mutex schedulerMutex;
-        bool isValidTask(const unique_ptr<TCB>& task) const;
         string lastExecutedTask;
-        vector<string> getReadyTasksInOrder() const;
         mutable int timerOverheadMicroseconds;
-        public:
+        static constexpr int MAX_TIMER_VALUE = 1000;
+    public:
+            bool isValidTask(const unique_ptr<TCB>& task) const;
             bool registerTask(unique_ptr<TCB> task);
             bool isTaskRegistered(const string& name) const;
             TCB* findTaskByName(const string& name) const;
@@ -27,14 +26,16 @@ class Scheduler{
             int getNumberOfRegisteredTasks() const;
             bool unregisterTask(const string& name);
 
+            
             void getRegistrationStats() const;
             bool hasTaskWithPriority(Priority priority) const;
             vector<string> getTaskNamesByState(TaskState state) const;
             int getTaskCountByState(TaskState state) const;
             void displayTaskSummary() const;
             int getTaskCountByPriority(Priority priority) const;
+
+            vector<string> getReadyTasksInOrder() const;
             bool executeNextReadyTask();
-            void runSchedulingCycle();
             string getNextTaskToExecute(vector<string> taskReady) const;
 
             void updateTaskTimers();
@@ -52,4 +53,6 @@ class Scheduler{
             bool validateTimerValue(const unique_ptr<TCB>& task) const ;
             void displayDetailedTimerStatus() const;
             void displayTimerEfficiency() const;
+
+            
 };

@@ -17,5 +17,5 @@ class InputMonitor{
 
         void startMonitoring();
         void stopMonitoring();
-        bool isShutdownRequested() const;
+        bool isShutdownRequested( ) const{return shutdownRequested;}
 };

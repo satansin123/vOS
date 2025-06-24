@@ -11,7 +11,7 @@
 using namespace std;
 
 unique_ptr<Kernel> Kernel::instance = nullptr;
-atomic<uint64_t> Kernel::tickCounter {0};
+atomic<uint64_t> Kernel::kernelTickCounter {0};
 
 Kernel::Kernel() : initialized(false){
     deviceRegistry = make_unique<DeviceRegistry>();
@@ -75,5 +75,5 @@ void Kernel::shutdown() {
     initialized = false;
     
     logger->log(MessageType::SHUTDOWN, "vOS shutdown complete");
-    logger->shutdown();
+    logger->stop();
 }

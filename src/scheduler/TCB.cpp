@@ -31,8 +31,8 @@ bool TCB::isValidTransition(TaskState from, TaskState to){
     }
 }
 
-bool TCB::executeTask(){
-    if (state!= TaskState::RUNNING || !taskCallback) {
+bool TCB::executeTask() const{
+    if (state!= TaskState::RUNNING || !hasCallback()) {
         return false;
     }
     try{
@@ -63,7 +63,7 @@ string TCB::getPriorityString() const {
 }
 
 
-bool TCB::decrementWaitTimer(){
+bool TCB::incrementCurrentWaitTimer(){
     lock_guard<mutex> lock(tcbMutex);
     if (state != TaskState::WAITING) {
         return false;
@@ -77,11 +77,11 @@ bool TCB::decrementWaitTimer(){
     return false;
 }
 void TCB::incrementActivation(){
-            timerActivations++;
-            auto now = chrono::steady_clock::now();
+    timerActivations++;
+    auto now = chrono::steady_clock::now();
 
-            if (lastActivationTime != chrono::steady_clock::time_point{}) {
-                totalWaitTIme+=chrono::duration_cast<chrono::milliseconds>(now-lastActivationTime);
-            }
-            lastActivationTime = now;
-        }
+    if (lastActivationTime != chrono::steady_clock::time_point{}) {
+        totalWaitTIme+=chrono::duration_cast<chrono::milliseconds>(now-lastActivationTime);
+    }
+    lastActivationTime = now;
+}

@@ -12,12 +12,13 @@ class Clock{
         thread clockThread;
 
         void clockLoop();
+
     public:
         Clock();
         ~Clock();
+
         bool initialise();
         void stop();
-
         bool isRunning() const {
             return running;
         }

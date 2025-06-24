@@ -13,13 +13,15 @@ enum class MessageType{
     PROMPT,
     STATUS,
     HEADER,
-    USER_FEEDBACK
+    USER_FEEDBACK,
+    SCHEDULER,
+    TIMER,
 };
 class Logger{
     private:
         atomic<bool> initialized;
+        atomic<bool> stopping;
         mutex logMutex;
-        atomic<bool> shuttingDown;
 
         string formatMessage(MessageType type, const string& message) const;
         
@@ -28,9 +30,8 @@ class Logger{
         ~Logger();
 
         bool initialize();
-        void shutdown();
-        void log(MessageType type,const string& message);
-
+        void stop();
         bool isInitialized();
 
+        void log(MessageType type,const string& message);
 };

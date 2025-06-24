@@ -5,10 +5,10 @@
 #include <string>
 
 using namespace std;
-
-Logger::Logger():initialized(false), shuttingDown(false){}
+// stopping = true - its not initialised
+Logger::Logger():initialized(false), stopping(false){}
 Logger::~Logger(){
-    shutdown();
+    stop();
 }
 
 bool Logger::initialize(){
@@ -16,20 +16,25 @@ bool Logger::initialize(){
     if (initialized) {
         return true;
     }
-    shuttingDown = false;
+    stopping = false;
     initialized = true;
     return true;
 }
 
-void Logger::shutdown(){
+void Logger::stop(){
     lock_guard<mutex> lock(logMutex);
-    shuttingDown = true;
+    stopping = true;
     initialized = false;
+}
+
+bool Logger::isInitialized() {
+    lock_guard<mutex> lock(logMutex);
+    return initialized && !stopping;
 }
 
 void Logger::log(MessageType type, const string& message){
     lock_guard<mutex> lock(logMutex);
-    if(!initialized || shuttingDown){
+    if(!initialized || stopping){
         return;
     }
     string formattedMessage = formatMessage(type,message);
@@ -40,11 +45,6 @@ void Logger::log(MessageType type, const string& message){
     else{
         cout.flush();
     }
-}
-
-bool Logger::isInitialized() {
-    lock_guard<mutex> lock(logMutex);
-    return initialized && !shuttingDown;
 }
 
 string Logger::formatMessage(MessageType type, const string& message) const {
@@ -58,6 +58,8 @@ string Logger::formatMessage(MessageType type, const string& message) const {
         case MessageType::HEADER: return "\n=== " + message + " ===";
         case MessageType::USER_FEEDBACK: return message;
         case MessageType::PROMPT: return "";
+        case MessageType::SCHEDULER: return "[SCHEDULER] "+message;
+        case MessageType::TIMER: return "[TIMER] "+message;
         default: return message;
     }
 }

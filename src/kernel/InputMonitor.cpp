@@ -21,10 +21,6 @@ void InputMonitor::stopMonitoring(){
         }
     }
 }
-
-bool InputMonitor::isShutdownRequested() const {
-    return shutdownRequested;
-}
 void InputMonitor::startMonitoring(){
     if (!monitoring) {
         monitoring = true;
