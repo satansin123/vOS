@@ -79,15 +79,34 @@ int main(int argc, char* argv[]) {
     bool runDemo = (argc > 1 && string(argv[1]) == "demo") || !isatty(fileno(stdin));
 
     if (runDemo) {
-        logger.log(MessageType::INFO, "Running in DEMO MODE for 20 seconds...");
-        logger.log(MessageType::INFO, "Watch the round-robin task execution and timer system in action!");
-        
-        auto startTime = chrono::steady_clock::now();
-        auto demoTime = chrono::seconds(5);
-        
-        while (chrono::steady_clock::now() - startTime < demoTime) {
-            this_thread::sleep_for(chrono::milliseconds(1000)); // Just wait, let the system run automatically
-        }
+        // Enhanced Timer System Demo
+logger.log(MessageType::HEADER, "Enhanced Timer System Demo");
+
+// Enable countdown logging for demonstration
+if (auto task = scheduler.findTaskByName("BackgroundLogger")) {
+    task->enableTimerCountdown(true);
+}
+
+// Show initial timer status
+scheduler.displayDetailedTimerStatus();
+
+// Run demo with timer monitoring
+for (int i = 0; i < 10; i++) {
+    this_thread::sleep_for(chrono::milliseconds(2000));
+    
+    logger.log(MessageType::STATUS, "=== Timer Demo - Iteration " + to_string(i+1) + " ===");
+    scheduler.displayDetailedTimerStatus();
+    scheduler.displayTimerEfficiency();
+    
+    // Demonstrate dynamic timer adjustment
+    if (i == 5) {
+        scheduler.adjustTaskTimer("SystemMonitor", 6); // Change from 3 to 6 ticks
+    }
+}
+
+// Final timer statistics
+scheduler.displayTimerStatistics();
+
         
         logger.log(MessageType::INFO, "Demo completed! Tasks executed with automatic timer management.");
     } else {

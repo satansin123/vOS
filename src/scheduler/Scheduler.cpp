@@ -317,7 +317,7 @@ void Scheduler::updateTaskTimers() {
             
             if(pair.second->decrementWaitTimer()) {
                 Kernel::getInstance().getLogger().log(MessageType::INFO, 
-                    "[TIMER] " + pair.first + " timer expired (WAITING → READY)");
+                    "[TIMER] " + pair.first + " timer expired (WAITING -> READY)");
             }
         }
     }
@@ -414,4 +414,74 @@ bool Scheduler::resumeTaskTimer(const string& taskName){
         return true;
     }
     return false;
+}
+
+vector<pair<string, pair<int, int>>> Scheduler::getTimerStatus() const{ //name, (current, total)
+    lock_guard<mutex> lock(schedulerMutex);
+    vector<pair<string, pair<int, int>>> status;
+    for (const auto& pair: registeredTasks) {
+        if (pair.second->getState() == TaskState::WAITING) {
+            status.emplace_back(pair.first, make_pair(pair.second->getCurrentWaitTicks(),pair.second->getWaitTicks()));
+        }
+    }
+    return status;
+}
+
+bool Scheduler::validateTimerValue(const unique_ptr<TCB>& task) const {
+    if (task->getWaitTicks() < 0 || task->getWaitTicks()>MAX_TIMER_VALUE) {
+        Kernel::getInstance().getLogger().log(MessageType::ERROR, "Wait time is either too large or negative");
+        return false;
+    }
+    return true;
+}
+
+void Scheduler::displayDetailedTimerStatus() const {
+    lock_guard<mutex> lock(schedulerMutex);
+    
+    Kernel::getInstance().getLogger().log(MessageType::HEADER, "Detailed Timer Status");
+    
+    for(const auto& pair : registeredTasks) {
+        const auto& task = pair.second;
+        string status;
+        
+        if(task->getState() == TaskState::WAITING) {
+            int remaining = task->getWaitTicks() - task->getCurrentWaitTicks();
+            float progress = static_cast<float>(task->getCurrentWaitTicks()) / task->getWaitTicks() * 100.0f;
+            
+            status = task->getStateString() + " (" + to_string(remaining) + "/" + 
+                    to_string(task->getWaitTicks()) + " ticks, " + 
+                    to_string(static_cast<int>(progress)) + "% complete)";
+        } else {
+            status = task->getStateString();
+        }
+        
+        Kernel::getInstance().getLogger().log(MessageType::STATUS, 
+            pair.first + ": " + status + 
+            " - Activations: " + to_string(task->getTimerActivations()) +
+            (task->isTimerPaused() ? " [PAUSED]" : ""));
+    }
+    
+    auto mostActive = getMostActiveTask();
+    Kernel::getInstance().getLogger().log(MessageType::STATUS, 
+        "Most active task: " + mostActive.first + " (" + to_string(mostActive.second) + " activations)");
+}
+
+void Scheduler::displayTimerEfficiency() const {
+    lock_guard<mutex> lock(schedulerMutex);
+    
+    Kernel::getInstance().getLogger().log(MessageType::HEADER, "Timer System Efficiency");
+    
+    int totalTasks = registeredTasks.size();
+    int waitingTasks = getTaskCountByState(TaskState::WAITING);
+    int readyTasks = getTaskCountByState(TaskState::READY);
+    
+    float utilizationRate = totalTasks > 0 ? 
+        static_cast<float>(readyTasks) / totalTasks * 100.0f : 0.0f;
+    
+    Kernel::getInstance().getLogger().log(MessageType::STATUS, 
+        "Timer utilization: " + to_string(static_cast<int>(utilizationRate)) + "%");
+    Kernel::getInstance().getLogger().log(MessageType::STATUS, 
+        "Active timers: " + to_string(waitingTasks) + "/" + to_string(totalTasks));
+    Kernel::getInstance().getLogger().log(MessageType::STATUS, 
+        "Timer overhead: " + to_string(timerOverheadMicroseconds) + "μs per tick");
 }

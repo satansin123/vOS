@@ -7,6 +7,8 @@
 #include<mutex>
 #include <utility>
 #include <vector>
+
+#define MAX_TIMER_VALUE 1000
 using namespace std;
 
 class Scheduler{
@@ -16,6 +18,7 @@ class Scheduler{
         bool isValidTask(const unique_ptr<TCB>& task) const;
         string lastExecutedTask;
         vector<string> getReadyTasksInOrder() const;
+        mutable int timerOverheadMicroseconds;
         public:
             bool registerTask(unique_ptr<TCB> task);
             bool isTaskRegistered(const string& name) const;
@@ -45,4 +48,8 @@ class Scheduler{
             bool pauseTaskTimer(const string& taskName);
             bool resumeTaskTimer(const string& taskName);
             vector<pair<string, pair<int, int>>> getTimerStatus() const;
+
+            bool validateTimerValue(const unique_ptr<TCB>& task) const ;
+            void displayDetailedTimerStatus() const;
+            void displayTimerEfficiency() const;
 };
