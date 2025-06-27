@@ -60,6 +60,7 @@ string Logger::formatMessage(MessageType type, const string& message) const {
         case MessageType::PROMPT: return "";
         case MessageType::SCHEDULER: return "[SCHEDULER] "+message;
         case MessageType::TIMER: return "[TIMER] "+message;
+        case MessageType::UART: return "[UART] "+message;
         default: return message;
     }
 }

@@ -16,6 +16,7 @@ enum class MessageType{
     USER_FEEDBACK,
     SCHEDULER,
     TIMER,
+    UART,
 };
 class Logger{
     private:

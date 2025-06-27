@@ -17,7 +17,7 @@ struct Device{
 class DeviceRegistry{
     private:
         vector<Device> devices;
-        mutex registryMutex;
+        mutable mutex registryMutex;
         bool initialized;
 
     public:
@@ -30,6 +30,6 @@ class DeviceRegistry{
         void registerDevice(const string& name, const string& type);
         void unregisterDevice(const string& name);
 
-        size_t getDeviceCount() ;
-        vector<Device> getDevices() ;
+        size_t getDeviceCount() const;
+        vector<Device> getDevices() const;
 };

@@ -47,12 +47,12 @@ void DeviceRegistry::unregisterDevice(const string &name) {
       devices.end());
 }
 
-size_t DeviceRegistry::getDeviceCount() {
+size_t DeviceRegistry::getDeviceCount() const{
     lock_guard<mutex> lock(registryMutex);
     return devices.size();
 }
 
-vector<Device> DeviceRegistry::getDevices()  {
+vector<Device> DeviceRegistry::getDevices() const {
     lock_guard<mutex> lock(registryMutex);
     return devices;
 }

@@ -1,0 +1,38 @@
+#ifndef DRIVER_TYPES_H
+#define DRIVER_TYPES_H
+#include <stddef.h>
+typedef enum {
+    DRIVER_TYPE_UART = 1,
+    DRIVER_TYPE_I2C = 2,
+    DRIVER_TYPE_SPI = 3,
+    DRIVER_TYPE_GPIO = 4,
+    DRIVER_TYPE_TIMER = 5,
+    DRIVER_TYPE_ADC = 6,
+    DRIVER_TYPE_PWM = 7
+} DriverType;
+
+typedef enum {
+    DRIVER_STATUS_SUCCESS = 0,
+    DRIVER_STATUS_ERROR = -1,
+    DRIVER_STATUS_NOT_READY = -2,
+    DRIVER_STATUS_TIMEOUT = -3,
+    DRIVER_STATUS_INVALID_PARAM = -4,
+    DRIVER_STATUS_BUSY = -5
+} DriverStatus;
+
+typedef enum{
+    DRIVER_CAP_READ = 0x01,
+    DRIVER_CAP_WRITE = 0x02,
+    DRIVER_CAP_CONFIGURE = 0x04,
+    DRIVER_CAP_INTERRUPT = 0x08,
+    DRIVER_CAP_DMA = 0x10,
+} DriverCapabilities;
+
+typedef enum{
+    DRIVER_STATE_UNINITIALIZED = 0,
+    DRIVER_STATE_INITIALIZED = 1,
+    DRIVER_STATE_ACTIVE = 2,
+    DRIVER_STATE_ERROR = 3,
+} DriverState;
+
+#endif
