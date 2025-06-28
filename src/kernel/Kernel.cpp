@@ -18,6 +18,7 @@ Kernel::Kernel() : initialized(false){
     systemClock = make_unique<Clock>();
     logger = make_unique<Logger>();
     scheduler = make_unique<Scheduler>();
+    dllLoader = std::make_unique<DllLoader>(*logger);
 }
 
 Kernel::~Kernel(){
@@ -44,7 +45,7 @@ bool Kernel::initialize() {
     logger->log(MessageType::BOOT, string(getName()) + " v" + getVersion() + " - Initialising...");
     
     if (!deviceRegistry->initialize()) {
-        logger->log(MessageType::ERROR, "Failed to initialize device registry");
+        logger->log(MessageType::ERRORS, "Failed to initialize device registry");
         return false;
     }
     logger->log(MessageType::BOOT, "Device registry initialized");
@@ -52,7 +53,7 @@ bool Kernel::initialize() {
     logger->log(MessageType::BOOT, "Scheduler initialized");
     
     if (!systemClock->initialise()) {
-        logger->log(MessageType::ERROR, "Failed to initialize system clock");
+        logger->log(MessageType::ERRORS, "Failed to initialize system clock");
         return false;
     }
     logger->log(MessageType::BOOT, "System clock initialized");

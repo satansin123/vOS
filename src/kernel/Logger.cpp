@@ -51,7 +51,7 @@ string Logger::formatMessage(MessageType type, const string& message) const {
     switch (type) {
         case MessageType::BOOT: return "[BOOT] " + message;
         case MessageType::INFO: return "[INFO] " + message;
-        case MessageType::ERROR: return "[ERROR] " + message;
+        case MessageType::ERRORS: return "[ERROR] " + message;
         case MessageType::SHUTDOWN: return "[SHUTDOWN] " + message;
         case MessageType::HEARTBEAT: return "[TICK " + to_string(Kernel::getTicks()) + "] " + message;
         case MessageType::STATUS: return  message;
@@ -61,6 +61,7 @@ string Logger::formatMessage(MessageType type, const string& message) const {
         case MessageType::SCHEDULER: return "[SCHEDULER] "+message;
         case MessageType::TIMER: return "[TIMER] "+message;
         case MessageType::UART: return "[UART] "+message;
+        case MessageType::DLL_LOADER: return "[DLL_LOADER] "+message;
         default: return message;
     }
 }

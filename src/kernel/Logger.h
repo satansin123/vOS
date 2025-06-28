@@ -7,7 +7,7 @@ using namespace std;
 enum class MessageType{
     BOOT,
     INFO,
-    ERROR,
+    ERRORS,
     SHUTDOWN,
     HEARTBEAT,
     PROMPT,
@@ -17,6 +17,7 @@ enum class MessageType{
     SCHEDULER,
     TIMER,
     UART,
+    DLL_LOADER
 };
 class Logger{
     private:

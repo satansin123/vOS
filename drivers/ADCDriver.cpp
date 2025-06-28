@@ -1,9 +1,6 @@
-#include "../src/kernel/Kernel.h"
 #include "DriverInterface.h"
 #include "DriverTypes.h"
-#include <string>
-#include "../src/kernel/Logger.h"
-using namespace std;
+#include <iostream>
 
 static bool initialized = false;
 static DriverState currentState = DRIVER_STATE_UNINITIALIZED;
@@ -12,91 +9,80 @@ extern "C" {
     const char* driverName() {
         return "ADC0_Driver";
     }
-    
+
     bool driverInit() {
-        if (initialized) {
-            return true;
-        }
+        if (initialized) return true;
         
-        Kernel::getInstance().getLogger().log(MessageType::INFO, "[ADC] Initializing ADC hardware");
-        Kernel::getInstance().getLogger().log(MessageType::INFO, "[ADC] Setting resolution: 12-bit");
-        Kernel::getInstance().getLogger().log(MessageType::INFO, "[ADC] Configuring 8 input channels");
-        Kernel::getInstance().getLogger().log(MessageType::INFO, "[ADC] Setting reference voltage: 3.3V");
+        std::cout << "[ADC] Initializing ADC hardware" << std::endl;
+        std::cout << "[ADC] Setting resolution: 12-bit" << std::endl;
+        std::cout << "[ADC] Configuring 8 input channels" << std::endl;
+        std::cout << "[ADC] Setting reference voltage: 3.3V" << std::endl;
         
         initialized = true;
         currentState = DRIVER_STATE_INITIALIZED;
         return true;
     }
-    
+
     void driverCleanup() {
         if (initialized) {
-            Kernel::getInstance().getLogger().log(MessageType::INFO, "[ADC] Cleaning up ADC resources");
-            Kernel::getInstance().getLogger().log(MessageType::INFO, "[ADC] Powering down ADC");
+            std::cout << "[ADC] Cleaning up ADC resources" << std::endl;
+            std::cout << "[ADC] Powering down ADC" << std::endl;
             initialized = false;
             currentState = DRIVER_STATE_UNINITIALIZED;
         }
     }
-    
+
     const char* driverVersion() {
         return "1.0.0";
     }
-    
-    DriverType driverGetType() {
-        return DRIVER_TYPE_ADC;
-    }
-    
+
     int driverGetCapabilities() {
         return DRIVER_CAP_READ | DRIVER_CAP_CONFIGURE | DRIVER_CAP_DMA;
     }
-    
+
+    DriverType driverGetType() {
+        return DRIVER_TYPE_ADC;
+    }
+
     DriverStatus driverGetStatus() {
         return initialized ? DRIVER_STATUS_SUCCESS : DRIVER_STATUS_NOT_READY;
     }
-    
+
     DriverStatus driverRead(void* buffer, size_t size) {
-        if (!initialized) {
-            return DRIVER_STATUS_NOT_READY;
-        }
+        if (!initialized) return DRIVER_STATUS_NOT_READY;
         
-        if (size == 2) { // Single channel reading
-            Kernel::getInstance().getLogger().log(MessageType::INFO, "[ADC] Reading single channel (12-bit value)");
+        if (size == 2) {
+            std::cout << "[ADC] Reading single channel (12-bit value)" << std::endl;
         } else {
-            Kernel::getInstance().getLogger().log(MessageType::INFO, "[ADC] Reading " + to_string(size/2) + " channels");
+            std::cout << "[ADC] Reading " << (size / 2) << " channels" << std::endl;
         }
-        
         return DRIVER_STATUS_SUCCESS;
     }
-    
+
     DriverStatus driverWrite(const void* buffer, size_t size) {
-        if (!initialized) {
-            return DRIVER_STATUS_NOT_READY;
-        }
-        
-        // ADC typically doesn't support write, but we can use it for calibration data
-        Kernel::getInstance().getLogger().log(MessageType::INFO, "[ADC] Setting calibration data");
+        if (!initialized) return DRIVER_STATUS_NOT_READY;
+        std::cout << "[ADC] Setting calibration data" << std::endl;
         return DRIVER_STATUS_SUCCESS;
     }
-    
+
     DriverStatus driverConfigure(int parameter, int value) {
-        if (!initialized) {
-            return DRIVER_STATUS_NOT_READY;
-        }
+        if (!initialized) return DRIVER_STATUS_NOT_READY;
         
         switch (parameter) {
-            case 1: // Channel selection
-                Kernel::getInstance().getLogger().log(MessageType::INFO, "[ADC] Selecting channel: " + to_string(value));
+            case 1:
+                std::cout << "[ADC] Selecting channel: " << value << std::endl;
                 break;
-            case 2: // Sampling rate
-                Kernel::getInstance().getLogger().log(MessageType::INFO, "[ADC] Setting sampling rate: " + to_string(value) + " Hz");
+            case 2:
+                std::cout << "[ADC] Setting sampling rate: " << value << " Hz" << std::endl;
                 break;
-            case 3: // Reference voltage
-                Kernel::getInstance().getLogger().log(MessageType::INFO, "[ADC] Setting reference: " + to_string(value) + " mV");
+            case 3:
+                std::cout << "[ADC] Setting reference: " << value << " mV" << std::endl;
                 break;
             default:
-                Kernel::getInstance().getLogger().log(MessageType::INFO, "[ADC] Configuring parameter " + to_string(parameter) + " = " + to_string(value));
+                std::cout << "[ADC] Configuring parameter " << parameter 
+                          << " = " << value << std::endl;
                 break;
         }
-        
         return DRIVER_STATUS_SUCCESS;
     }
 }

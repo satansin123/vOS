@@ -1,69 +1,67 @@
 #include "DriverInterface.h"
-#include "../src/kernel/Logger.h"
-#include "../src/kernel/Kernel.h"
 #include "DriverTypes.h"
-#include<string>
+#include <iostream>
 
 static bool initialized = false;
 static DriverState currentState = DRIVER_STATE_UNINITIALIZED;
 
-extern "C"{
-    const char* driverName(){
+extern "C" {
+    const char* driverName() {
         return "UART0_Driver";
     }
-    bool driverInit(){
-        if (initialized) {
-            return true;
-        }
-        Kernel::getInstance().getLogger().log(MessageType::UART, "Initialising UART hardware");
-        Kernel::getInstance().getLogger().log(MessageType::UART, "Setting baud rate: 115200");
-        Kernel::getInstance().getLogger().log(MessageType::UART, "Configuring 8N1 format");
 
+    bool driverInit() {
+        if (initialized) return true;
+        
+        std::cout << "[UART] Initializing UART hardware" << std::endl;
+        std::cout << "[UART] Setting baud rate: 115200" << std::endl;
+        std::cout << "[UART] Configuring 8N1 format" << std::endl;
+        
         initialized = true;
         currentState = DRIVER_STATE_INITIALIZED;
-        return initialized;
+        return true;
     }
 
-    void driverCleanup(){
+    void driverCleanup() {
         if (initialized) {
-            Kernel::getInstance().getLogger().log(MessageType::UART, "Cleaning up UART resources");
+            std::cout << "[UART] Cleaning up UART resources" << std::endl;
             initialized = false;
             currentState = DRIVER_STATE_UNINITIALIZED;
         }
     }
 
-    const char* driverVersion(){
+    const char* driverVersion() {
         return "1.0.0";
     }
-    int driverGetCapabilities(){
-        return DRIVER_CAP_READ | DRIVER_CAP_CONFIGURE | DRIVER_CAP_WRITE;
+
+    int driverGetCapabilities() {
+        return DRIVER_CAP_READ | DRIVER_CAP_WRITE | DRIVER_CAP_CONFIGURE;
     }
-    DriverType driverGetType(){
+
+    DriverType driverGetType() {
         return DRIVER_TYPE_UART;
     }
-    DriverStatus driverGetStatus(){
+
+    DriverStatus driverGetStatus() {
         return initialized ? DRIVER_STATUS_SUCCESS : DRIVER_STATUS_NOT_READY;
     }
 
-    DriverStatus driverRead(void* buffer, size_t size){
-        if (!initialized) {
-            return DRIVER_STATUS_NOT_READY;
-        }
-        Kernel::getInstance().getLogger().log(MessageType::UART, "Reading "+ to_string(size) +" bytes");
+    DriverStatus driverRead(void* buffer, size_t size) {
+        if (!initialized) return DRIVER_STATUS_NOT_READY;
+        std::cout << "[UART] Reading " << size << " bytes" << std::endl;
         return DRIVER_STATUS_SUCCESS;
     }
-    DriverStatus driverWrite(const void* buffer, size_t size){
-        if (!initialized) {
-            return DRIVER_STATUS_NOT_READY;
-        }
-        Kernel::getInstance().getLogger().log(MessageType::UART, "Writing "+ to_string(size) +" bytes");
+
+    DriverStatus driverWrite(const void* buffer, size_t size) {
+        if (!initialized) return DRIVER_STATUS_NOT_READY;
+        std::cout << "[UART] Writing " << size << " bytes" << std::endl;
         return DRIVER_STATUS_SUCCESS;
     }
-    DriverStatus driverConfigure(int parameter, int value){
-        if (!initialized) {
-            return DRIVER_STATUS_NOT_READY;
-        }
-        Kernel::getInstance().getLogger().log(MessageType::UART, "configuring parameter " + to_string(parameter) + " to value "+ to_string(value));
+
+    DriverStatus driverConfigure(int parameter, int value) {
+        if (!initialized) return DRIVER_STATUS_NOT_READY;
+        std::cout << "[UART] Configuring parameter " << parameter 
+                  << " to value " << value << std::endl;
         return DRIVER_STATUS_SUCCESS;
     }
 }

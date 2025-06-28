@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <memory>
 #include "../scheduler/Scheduler.h"
+#include "DllLoader.h"
 using namespace std;
 
 class DeviceRegistry;
@@ -19,6 +20,7 @@ class Kernel{
         unique_ptr<Clock> systemClock;
         unique_ptr<Logger> logger;
         unique_ptr<Scheduler> scheduler;
+        unique_ptr<DllLoader> dllLoader;
 
         bool initialized;
 
@@ -59,6 +61,9 @@ class Kernel{
         }
         Scheduler& getScheduler() const{
             return *scheduler;
+        }
+        DllLoader& getDllLoader() const{
+            return *dllLoader;
         }
 
 };

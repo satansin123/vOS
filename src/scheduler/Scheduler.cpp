@@ -32,12 +32,12 @@ bool Scheduler::isValidTask(const unique_ptr<TCB>& task) const{
 bool Scheduler::registerTask(unique_ptr<TCB> task){
     lock_guard<mutex> lock(schedulerMutex);
     if(!isValidTask(task)){
-        Kernel::getInstance().getLogger().log(MessageType::ERROR, "Task validation failed");
+        Kernel::getInstance().getLogger().log(MessageType::ERRORS, "Task validation failed");
         return false;
     }
     string taskName = task->getName();
     if (registeredTasks.find(taskName) != registeredTasks.end()) {
-        Kernel::getInstance().getLogger().log(MessageType::ERROR, "Task name is duplicate for :" + taskName);
+        Kernel::getInstance().getLogger().log(MessageType::ERRORS, "Task name is duplicate for :" + taskName);
         return false;
     }
 
@@ -96,7 +96,7 @@ bool Scheduler::unregisterTask(const string& name){
         return true;
     }
     
-    Kernel::getInstance().getLogger().log(MessageType::ERROR, 
+    Kernel::getInstance().getLogger().log(MessageType::ERRORS, 
         "Task not found for unregistration: " + name);
     return false;
 }
@@ -278,7 +278,7 @@ bool Scheduler::executeNextReadyTask(){
     Kernel::getInstance().getLogger().log(MessageType::SCHEDULER, "Executing " + taskToExecute + " (READY -> RUNNING)");
     
     if(!task->setState(TaskState::RUNNING)){
-        Kernel::getInstance().getLogger().log(MessageType::ERROR, "Failed to transition " + taskToExecute + " to RUNNING state");
+        Kernel::getInstance().getLogger().log(MessageType::ERRORS, "Failed to transition " + taskToExecute + " to RUNNING state");
         return false;
     }
     
@@ -287,11 +287,11 @@ bool Scheduler::executeNextReadyTask(){
     if(executionSuccess){
         Kernel::getInstance().getLogger().log(MessageType::SCHEDULER,  taskToExecute + " completed successfully");
     } else {
-        Kernel::getInstance().getLogger().log(MessageType::ERROR,  taskToExecute + " execution failed");
+        Kernel::getInstance().getLogger().log(MessageType::ERRORS,  taskToExecute + " execution failed");
     }
     
     if(!task->setState(TaskState::WAITING)){
-        Kernel::getInstance().getLogger().log(MessageType::ERROR, "Failed to transition " + taskToExecute + " to WAITING state");
+        Kernel::getInstance().getLogger().log(MessageType::ERRORS, "Failed to transition " + taskToExecute + " to WAITING state");
     } else {
         Kernel::getInstance().getLogger().log(MessageType::SCHEDULER,  taskToExecute + " complete (RUNNING -> WAITING)");
     }
@@ -362,7 +362,7 @@ bool Scheduler::adjustTaskTimer(const string& taskName, int newPeriod){
     lock_guard<mutex> lock(schedulerMutex);
 
     if (newPeriod<=0) {
-        Kernel::getInstance().getLogger().log(MessageType::ERROR, "Invalid period " + to_string(newPeriod) + " for " + taskName);
+        Kernel::getInstance().getLogger().log(MessageType::ERRORS, "Invalid period " + to_string(newPeriod) + " for " + taskName);
         return false;
     }
     auto it = registeredTasks.find(taskName);
@@ -412,7 +412,7 @@ vector<pair<string, pair<int, int>>> Scheduler::getTimerStatus() const{ //name, 
 
 bool Scheduler::validateTimerValue(const unique_ptr<TCB>& task) const {
     if (task->getWaitTicks() < 0 || task->getWaitTicks()>MAX_TIMER_VALUE) {
-        Kernel::getInstance().getLogger().log(MessageType::ERROR, "Wait time is either too large or negative");
+        Kernel::getInstance().getLogger().log(MessageType::ERRORS, "Wait time is either too large or negative");
         return false;
     }
     return true;

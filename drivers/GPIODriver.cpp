@@ -1,9 +1,6 @@
-#include "../src/kernel/Kernel.h"
 #include "DriverInterface.h"
 #include "DriverTypes.h"
-#include <string>
-#include "../src/kernel/Logger.h"
-using namespace std;
+#include <iostream>
 
 static bool initialized = false;
 static DriverState currentState = DRIVER_STATE_UNINITIALIZED;
@@ -12,97 +9,87 @@ extern "C" {
     const char* driverName() {
         return "GPIO0_Driver";
     }
-    
+
     bool driverInit() {
-        if (initialized) {
-            return true;
-        }
+        if (initialized) return true;
         
-        Kernel::getInstance().getLogger().log(MessageType::INFO, "[GPIO] Initializing GPIO hardware");
-        Kernel::getInstance().getLogger().log(MessageType::INFO, "[GPIO] Configuring 32 GPIO pins");
-        Kernel::getInstance().getLogger().log(MessageType::INFO, "[GPIO] Setting default pin directions");
-        Kernel::getInstance().getLogger().log(MessageType::INFO, "[GPIO] Enabling interrupt support");
+        std::cout << "[GPIO] Initializing GPIO hardware" << std::endl;
+        std::cout << "[GPIO] Configuring 32 GPIO pins" << std::endl;
+        std::cout << "[GPIO] Setting default pin directions" << std::endl;
+        std::cout << "[GPIO] Enabling interrupt support" << std::endl;
         
         initialized = true;
         currentState = DRIVER_STATE_INITIALIZED;
         return true;
     }
-    
+
     void driverCleanup() {
         if (initialized) {
-            Kernel::getInstance().getLogger().log(MessageType::INFO, "[GPIO] Cleaning up GPIO resources");
-            Kernel::getInstance().getLogger().log(MessageType::INFO, "[GPIO] Disabling all interrupts");
-            Kernel::getInstance().getLogger().log(MessageType::INFO, "[GPIO] Resetting pin configurations");
+            std::cout << "[GPIO] Cleaning up GPIO resources" << std::endl;
+            std::cout << "[GPIO] Disabling all interrupts" << std::endl;
+            std::cout << "[GPIO] Resetting pin configurations" << std::endl;
             initialized = false;
             currentState = DRIVER_STATE_UNINITIALIZED;
         }
     }
-    
+
     const char* driverVersion() {
         return "1.0.0";
     }
-    
-    DriverType driverGetType() {
-        return DRIVER_TYPE_GPIO;
-    }
-    
+
     int driverGetCapabilities() {
         return DRIVER_CAP_READ | DRIVER_CAP_WRITE | DRIVER_CAP_CONFIGURE | DRIVER_CAP_INTERRUPT;
     }
-    
+
+    DriverType driverGetType() {
+        return DRIVER_TYPE_GPIO;
+    }
+
     DriverStatus driverGetStatus() {
         return initialized ? DRIVER_STATUS_SUCCESS : DRIVER_STATUS_NOT_READY;
     }
-    
+
     DriverStatus driverRead(void* buffer, size_t size) {
-        if (!initialized) {
-            return DRIVER_STATUS_NOT_READY;
-        }
+        if (!initialized) return DRIVER_STATUS_NOT_READY;
         
         if (size == 1) {
-            Kernel::getInstance().getLogger().log(MessageType::INFO, "[GPIO] Reading pin state");
+            std::cout << "[GPIO] Reading pin state" << std::endl;
         } else {
-            Kernel::getInstance().getLogger().log(MessageType::INFO, "[GPIO] Reading " + to_string(size) + " pin states");
+            std::cout << "[GPIO] Reading " << size << " pin states" << std::endl;
         }
-        
         return DRIVER_STATUS_SUCCESS;
     }
-    
+
     DriverStatus driverWrite(const void* buffer, size_t size) {
-        if (!initialized) {
-            return DRIVER_STATUS_NOT_READY;
-        }
+        if (!initialized) return DRIVER_STATUS_NOT_READY;
         
         if (size == 1) {
-            Kernel::getInstance().getLogger().log(MessageType::INFO, "[GPIO] Setting pin state");
+            std::cout << "[GPIO] Setting pin state" << std::endl;
         } else {
-            Kernel::getInstance().getLogger().log(MessageType::INFO, "[GPIO] Setting " + to_string(size) + " pin states");
+            std::cout << "[GPIO] Setting " << size << " pin states" << std::endl;
         }
-        
         return DRIVER_STATUS_SUCCESS;
     }
-    
+
     DriverStatus driverConfigure(int parameter, int value) {
-        if (!initialized) {
-            return DRIVER_STATUS_NOT_READY;
-        }
+        if (!initialized) return DRIVER_STATUS_NOT_READY;
         
         switch (parameter) {
-            case 1: // Pin direction
-                Kernel::getInstance().getLogger().log(MessageType::INFO, string("[GPIO] Setting pin direction: ") + (value ? "OUTPUT" : "INPUT"));
-
+            case 1:
+                std::cout << "[GPIO] Setting pin direction: " 
+                          << (value ? "OUTPUT" : "INPUT") << std::endl;
                 break;
-            case 2: // Pull-up/Pull-down
-                Kernel::getInstance().getLogger().log(MessageType::INFO, "[GPIO] Setting pull resistor: " + to_string(value));
+            case 2:
+                std::cout << "[GPIO] Setting pull resistor: " << value << std::endl;
                 break;
-            case 3: // Interrupt mode
-                Kernel::getInstance().getLogger().log(MessageType::INFO, "[GPIO] Setting interrupt mode: " + to_string(value));
+            case 3:
+                std::cout << "[GPIO] Setting interrupt mode: " << value << std::endl;
                 break;
             default:
-                Kernel::getInstance().getLogger().log(MessageType::INFO, "[GPIO] Configuring parameter " + to_string(parameter) + " = " + to_string(value));
+                std::cout << "[GPIO] Configuring parameter " << parameter 
+                          << " = " << value << std::endl;
                 break;
         }
-        
         return DRIVER_STATUS_SUCCESS;
     }
 }

@@ -12,6 +12,7 @@ endif()
 
 if(WIN32)
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+    add_definitions(-DWIN32_LEAN_AND_MEAN)
 endif()
 
 message(STATUS "=== Build Configuration ===")
@@ -26,6 +27,16 @@ endif()
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE src drivers)
+
+find_package(Threads REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
+
+if(WIN32)
+    target_link_libraries(${PROJECT_NAME} PRIVATE kernel32)
+elseif(UNIX)
+    target_link_libraries(${PROJECT_NAME} PRIVATE dl)
+endif()
+
 set_target_properties(${PROJECT_NAME} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
@@ -36,13 +47,25 @@ else()
     target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra)
 endif()
 
+# Build drivers as DLLs in the correct location
 file(GLOB DRIVER_SOURCES "drivers/*.cpp")
 foreach(driver_file ${DRIVER_SOURCES})
     get_filename_component(driver_name ${driver_file} NAME_WE)
     add_library(${driver_name} SHARED ${driver_file})
-    target_include_directories(${driver_name} PRIVATE src/kernel drivers)
+    
+    target_include_directories(${driver_name} PRIVATE drivers)
+    target_link_libraries(${driver_name} PRIVATE Threads::Threads)
+    
+    if(WIN32)
+        target_link_libraries(${driver_name} PRIVATE kernel32)
+    endif()
+    
+    # Put DLLs in bin/drivers/ directory (where app expects them)
     set_target_properties(${driver_name} PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/drivers
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/drivers
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/drivers
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/drivers
     )
 endforeach()
+
+# Create the drivers directory
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/bin/drivers)
