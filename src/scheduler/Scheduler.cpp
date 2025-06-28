@@ -104,7 +104,7 @@ bool Scheduler::unregisterTask(const string& name){
 void Scheduler::getRegistrationStats() const {
     lock_guard<mutex> lock(schedulerMutex);
     
-    int totalTasks = registeredTasks.size();
+    int totalTasks = static_cast<int>(registeredTasks.size());
     int readyTasks = getTaskCountByState(TaskState::READY);
     int runningTasks = getTaskCountByState(TaskState::RUNNING);
     int waitingTasks = getTaskCountByState(TaskState::WAITING);
@@ -335,7 +335,7 @@ void Scheduler::displayTimerStatistics() const{
                                                 to_string(activations) + " activations," +
                                             "avg wait: "+to_string(avgWait) + "ms");
         totalActivations+=activations;
-        totalActivations+=avgWait;
+        totalAvgWait+=avgWait;
     }
     Kernel::getInstance().getLogger().log(MessageType::STATUS, 
         "Total activations: " + to_string(totalActivations));
@@ -454,7 +454,7 @@ void Scheduler::displayTimerEfficiency() const {
     
     Kernel::getInstance().getLogger().log(MessageType::HEADER, "Timer System Efficiency");
     
-    int totalTasks = registeredTasks.size();
+    int totalTasks = static_cast<int>(registeredTasks.size());
     int waitingTasks = getTaskCountByState(TaskState::WAITING);
     int readyTasks = getTaskCountByState(TaskState::READY);
     

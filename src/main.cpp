@@ -1,8 +1,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <chrono>
-#include <thread>
 #include "kernel/Kernel.h"
 #include "kernel/Logger.h"
 #include "kernel/DllLoader.h"
@@ -11,6 +9,8 @@
 using namespace std;
 
 int main(int argc, char* argv[]) {
+    (void)argc;
+    (void)argv;
     auto& kernel = Kernel::getInstance();
     if (!kernel.initialize()) {
         cerr << "Failed to initialize kernel!" << endl;
@@ -27,14 +27,14 @@ int main(int argc, char* argv[]) {
     // Test 1: Load individual driver
     logger.log(MessageType::INFO, "=== Test 1: Individual Driver Loading ===");
     
-    string driverPath = "bin/drivers/UARTDriver.dll";
+    string driverPath = "drivers/UARTDriver.dll";
     bool loadResult = dllLoader.loadDriver(driverPath);
     logger.log(MessageType::INFO, "Individual load result: " + string(loadResult ? "SUCCESS" : "FAILED"));
 
     // Test 2: Bulk directory loading
     logger.log(MessageType::INFO, "=== Test 2: Bulk Directory Loading ===");
     
-    int loadedCount = dllLoader.loadAllDriversFromDirectory("bin/drivers");
+    int loadedCount = dllLoader.loadAllDriversFromDirectory("drivers");
     logger.log(MessageType::INFO, "Bulk loading result: " + to_string(loadedCount) + " drivers loaded");
 
     // Test 3: Driver access and testing

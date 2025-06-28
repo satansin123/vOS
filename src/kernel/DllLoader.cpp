@@ -8,56 +8,58 @@
 #include <memory>
 #include <minwindef.h>
 #include <string>
-#include<filesystem>
+#include <vector>
+#include <filesystem>  
 
 using namespace std;
 
-DllLoader::DllLoader(Logger& log) : logger(log){
+DllLoader::DllLoader(Logger& log) : logger(log) {
     logger.log(MessageType::DLL_LOADER, "Dynamic loader initialised");
 }
 
-DllLoader::~DllLoader(){
+DllLoader::~DllLoader() {
     unloadAllDrivers();
 }
 
-DllHandle DllLoader::loadLibrary(const string& path){
-    #ifdef _WIN32
-        return LoadLibraryA(path.c_str());
-    #else
-        return dlopen(path.c_str(), RTLD_LAZY);
-    #endif
+DllHandle DllLoader::loadLibrary(const string& path) {
+#ifdef _WIN32
+    return LoadLibraryA(path.c_str());
+#else
+    return dlopen(path.c_str(), RTLD_LAZY);
+#endif
 }
 
-FunctionPtr DllLoader::getFunctionAddress(DllHandle handle, const string& functionName){
-    #ifdef _WIN32
-        return GetProcAddress(handle, functionName.c_str());
-    #else
-        return dlsym(handle, functionName.c_str());
-    #endif
+FunctionPtr DllLoader::getFunctionAddress(DllHandle handle, const string& functionName) {
+#ifdef _WIN32
+    return GetProcAddress(handle, functionName.c_str());
+#else
+    return dlsym(handle, functionName.c_str());
+#endif
 }
 
-void DllLoader::unloadLibrary(DllHandle handle){
-    #ifdef _WIN32
-        FreeLibrary(handle);
-    #else
-        dlclose(handle);
-    #endif
+void DllLoader::unloadLibrary(DllHandle handle) {
+#ifdef _WIN32
+    FreeLibrary(handle);
+#else
+    dlclose(handle);
+#endif
 }
 
-bool DllLoader::loadDriver(const string& dllPath){
+bool DllLoader::loadDriver(const string& dllPath) {
     auto startTime = chrono::steady_clock::now();
-    logger.log(MessageType::DLL_LOADER, "Loading driver: "+ dllPath);
+    logger.log(MessageType::DLL_LOADER, "Loading driver: " + dllPath);
 
     DllHandle handle = loadLibrary(dllPath);
     if (!handle) {
         logger.log(MessageType::DLL_LOADER, "Failed to load DLL: " + dllPath);
         return false;
     }
-    string fileName = filesystem::path(dllPath).stem().string();
+
+    string fileName = std::filesystem::path(dllPath).stem().string();
     auto driver = make_unique<LoadedDriver>(fileName, dllPath, handle);
 
     if (!resolveFunctions(*driver)) {
-        logger.log(MessageType::DLL_LOADER, "Failed to resolve functions for: "+ fileName);
+        logger.log(MessageType::DLL_LOADER, "Failed to resolve functions for: " + fileName);
         unloadLibrary(handle);
         return false;
     }
@@ -68,25 +70,30 @@ bool DllLoader::loadDriver(const string& dllPath){
         return false;
     }
 
-    typedef const char* (*DriverNameFunc)();
-    DriverNameFunc nameFunc = reinterpret_cast<DriverNameFunc>(driver->functions.driverName);
+    // Fixed: Cast to void* first, then to target function type
+    typedef const char*(*DriverNameFunc)();
+    DriverNameFunc nameFunc = reinterpret_cast<DriverNameFunc>(
+        reinterpret_cast<void*>(driver->functions.driverName)
+    );
     string actualName = nameFunc();
     driver->name = actualName;
 
     if (loadedDrivers.find(actualName) != loadedDrivers.end()) {
-        logger.log(MessageType::DLL_LOADER, "Driver name conflict: "+ actualName);
+        logger.log(MessageType::DLL_LOADER, "Driver name conflict: " + actualName);
         unloadLibrary(handle);
         return false;
     }
 
     loadedDrivers[actualName] = std::move(driver);
+
     auto endTime = chrono::steady_clock::now();
-    auto duration = chrono::duration_cast<chrono::milliseconds>(endTime-startTime);
+    auto duration = chrono::duration_cast<chrono::milliseconds>(endTime - startTime);
     logger.log(MessageType::DLL_LOADER, "Driver loaded successfully: " + actualName + " (" + to_string(duration.count()) + "ms");
+
     return true;
 }
 
-bool DllLoader::resolveFunctions(LoadedDriver& driver){
+bool DllLoader::resolveFunctions(LoadedDriver& driver) {
     vector<pair<string, FunctionPtr*>> requiredFunctions = {
         {"driverName", &driver.functions.driverName},
         {"driverInit", &driver.functions.driverInit},
@@ -99,10 +106,14 @@ bool DllLoader::resolveFunctions(LoadedDriver& driver){
         {"driverWrite", &driver.functions.driverWrite},
         {"driverConfigure", &driver.functions.driverConfigure},
     };
-    for (auto& [funcName, funcPtr] : requiredFunctions){
+
+    for (const auto& funcPair : requiredFunctions) {
+        const string& funcName = funcPair.first;
+        FunctionPtr* funcPtr = funcPair.second;
+        
         *funcPtr = getFunctionAddress(driver.handle, funcName);
         if (!*funcPtr) {
-            logger.log(MessageType::DLL_LOADER, "Missing function: "+ funcName);
+            logger.log(MessageType::DLL_LOADER, "Missing function: " + funcName);
             return false;
         }
         logger.log(MessageType::DLL_LOADER, "resolved function:" + funcName);
@@ -110,29 +121,35 @@ bool DllLoader::resolveFunctions(LoadedDriver& driver){
     return true;
 }
 
-bool DllLoader::validateDriver(const LoadedDriver& driver){
-    typedef const char* (*DriverNameFunc)();
-    DriverNameFunc nameFunc = reinterpret_cast<DriverNameFunc>(driver.functions.driverName);
-
+bool DllLoader::validateDriver(const LoadedDriver& driver) {
+    // Fixed: Cast to void* first, then to target function type
+    typedef const char*(*DriverNameFunc)();
+    DriverNameFunc nameFunc = reinterpret_cast<DriverNameFunc>(
+        reinterpret_cast<void*>(driver.functions.driverName)
+    );
     const char* name = nameFunc();
+
     if (!name || strlen(name) == 0) {
         logger.log(MessageType::DLL_LOADER, "Invalid driver name");
         return false;
     }
-    typedef const char* (*DriverVersionFunc)();
-    DriverVersionFunc versionFunc = reinterpret_cast<DriverVersionFunc>(driver.functions.driverVersion);
-    
+
+    typedef const char*(*DriverVersionFunc)();
+    DriverVersionFunc versionFunc = reinterpret_cast<DriverVersionFunc>(
+        reinterpret_cast<void*>(driver.functions.driverVersion)
+    );
     const char* version = versionFunc();
+
     if (!version || strlen(version) == 0) {
         logger.log(MessageType::DLL_LOADER, "Invalid driver version");
         return false;
     }
-    
+
     logger.log(MessageType::DLL_LOADER, "Driver validation passed: " + std::string(name) + " v" + std::string(version));
     return true;
 }
 
-LoadedDriver* DllLoader::getDriver(const string& name){
+LoadedDriver* DllLoader::getDriver(const string& name) {
     auto it = loadedDrivers.find(name);
     return (it != loadedDrivers.end()) ? it->second.get() : nullptr;
 }
@@ -140,18 +157,18 @@ LoadedDriver* DllLoader::getDriver(const string& name){
 int DllLoader::loadAllDriversFromDirectory(const std::string& directory) {
     logger.log(MessageType::HEADER, "Bulk Driver Loading");
     logger.log(MessageType::DLL_LOADER, "[DLL_LOADER] Scanning directory: " + directory);
-    
+
     if (!std::filesystem::exists(directory)) {
         logger.log(MessageType::DLL_LOADER, "Directory not found: " + directory);
         return 0;
     }
-    
+
     int successCount = 0;
     int totalCount = 0;
     auto startTime = std::chrono::steady_clock::now();
-    
+
     try {
-        for (const auto& entry : filesystem::directory_iterator(directory)) {
+        for (const auto& entry : std::filesystem::directory_iterator(directory)) {
             if (entry.is_regular_file()) {
                 std::string extension = entry.path().extension().string();
                 
@@ -162,7 +179,6 @@ int DllLoader::loadAllDriversFromDirectory(const std::string& directory) {
 #endif
                     totalCount++;
                     std::string filepath = entry.path().string();
-                    
                     logger.log(MessageType::DLL_LOADER, "Attempting to load: " + entry.path().filename().string());
                     
                     if (loadDriver(filepath)) {
@@ -177,18 +193,19 @@ int DllLoader::loadAllDriversFromDirectory(const std::string& directory) {
     } catch (const std::exception& e) {
         logger.log(MessageType::DLL_LOADER, "Directory scan error: " + std::string(e.what()));
     }
-    
+
     auto endTime = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-    
+
     logger.log(MessageType::HEADER, "Bulk Loading Summary");
     logger.log(MessageType::STATUS, "Total DLLs found: " + std::to_string(totalCount));
     logger.log(MessageType::STATUS, "Successfully loaded: " + std::to_string(successCount));
     logger.log(MessageType::STATUS, "Failed to load: " + std::to_string(totalCount - successCount));
     logger.log(MessageType::STATUS, "Loading time: " + std::to_string(duration.count()) + "ms");
-    
+
     return successCount;
 }
+
 void DllLoader::displayLoadedDrivers() const {
     logger.log(MessageType::HEADER, "Loaded Drivers");
     
@@ -196,21 +213,30 @@ void DllLoader::displayLoadedDrivers() const {
         logger.log(MessageType::INFO, "No drivers currently loaded");
         return;
     }
-    
-    for (const auto& [name, driver] : loadedDrivers) {
-        // Get driver info
-        typedef const char* (*DriverVersionFunc)();
-        typedef int (*DriverTypeFunc)();
-        typedef int (*DriverCapabilitiesFunc)();
+
+    for (const auto& driverPair : loadedDrivers) {
+        const string& name = driverPair.first;
+        const unique_ptr<LoadedDriver>& driver = driverPair.second;
         
-        DriverVersionFunc versionFunc = reinterpret_cast<DriverVersionFunc>(driver->functions.driverVersion);
-        DriverTypeFunc typeFunc = reinterpret_cast<DriverTypeFunc>(driver->functions.driverGetType);
-        DriverCapabilitiesFunc capFunc = reinterpret_cast<DriverCapabilitiesFunc>(driver->functions.driverGetCapabilities);
+        // Fixed: Cast to void* first, then to target function types
+        typedef const char*(*DriverVersionFunc)();
+        typedef int(*DriverTypeFunc)();
+        typedef int(*DriverCapabilitiesFunc)();
         
+        DriverVersionFunc versionFunc = reinterpret_cast<DriverVersionFunc>(
+            reinterpret_cast<void*>(driver->functions.driverVersion)
+        );
+        DriverTypeFunc typeFunc = reinterpret_cast<DriverTypeFunc>(
+            reinterpret_cast<void*>(driver->functions.driverGetType)
+        );
+        DriverCapabilitiesFunc capFunc = reinterpret_cast<DriverCapabilitiesFunc>(
+            reinterpret_cast<void*>(driver->functions.driverGetCapabilities)
+        );
+
         std::string version = versionFunc();
         int type = typeFunc();
         int capabilities = capFunc();
-        
+
         logger.log(MessageType::STATUS, "Driver: " + name);
         logger.log(MessageType::STATUS, "  Version: " + version);
         logger.log(MessageType::STATUS, "  Type: " + std::to_string(type));
@@ -222,8 +248,8 @@ void DllLoader::displayLoadedDrivers() const {
 
 std::vector<std::string> DllLoader::getLoadedDriverNames() const {
     std::vector<std::string> names;
-    for (const auto& [name, driver] : loadedDrivers) {
-        names.push_back(name);
+    for (const auto& driverPair : loadedDrivers) {
+        names.push_back(driverPair.first);
     }
     return names;
 }
@@ -235,17 +261,19 @@ int DllLoader::getLoadedDriverCount() const {
 void DllLoader::unloadAllDrivers() {
     logger.log(MessageType::INFO, "[DLL_LOADER] Unloading all drivers...");
     
-    for (auto& [name, driver] : loadedDrivers) {
+    for (auto& driverPair : loadedDrivers) {
+        const string& name = driverPair.first;
+        unique_ptr<LoadedDriver>& driver = driverPair.second;
+        
         if (driver->initialized) {
-            // Call cleanup function
-            typedef void (*DriverCleanupFunc)();
-            DriverCleanupFunc cleanupFunc = reinterpret_cast<DriverCleanupFunc>(driver->functions.driverCleanup);
+            typedef void(*DriverCleanupFunc)();
+            DriverCleanupFunc cleanupFunc = reinterpret_cast<DriverCleanupFunc>(
+                reinterpret_cast<void*>(driver->functions.driverCleanup)
+            );
             cleanupFunc();
         }
-        
         unloadLibrary(driver->handle);
         logger.log(MessageType::INFO, "[DLL_LOADER] Unloaded: " + name);
     }
-    
     loadedDrivers.clear();
 }
