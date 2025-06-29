@@ -4,13 +4,14 @@
 #include <memory>
 #include "../scheduler/Scheduler.h"
 #include "DllLoader.h"
+#include "VirtualFileSystem.h"
 using namespace std;
 
 class DeviceRegistry;
 class Clock;
 class Logger;
 class Scheduler;
-
+class VirtualFileSystem;
 class Kernel{
     private:
         static unique_ptr<Kernel> instance;
@@ -21,6 +22,7 @@ class Kernel{
         unique_ptr<Logger> logger;
         unique_ptr<Scheduler> scheduler;
         unique_ptr<DllLoader> dllLoader;
+        unique_ptr<VirtualFileSystem> vfs;
 
         bool initialized;
 
@@ -64,6 +66,9 @@ class Kernel{
         }
         DllLoader& getDllLoader() const{
             return *dllLoader;
+        }
+        VirtualFileSystem& getVfs() const{
+            return *vfs;
         }
 
 };

@@ -63,6 +63,7 @@ string Logger::formatMessage(MessageType type, const string& message) const {
         case MessageType::UART: return "[UART] "+message;
         case MessageType::DLL_LOADER: return "[DLL_LOADER] "+message;
         case MessageType::INIT: return "[INIT] "+message;
+        case MessageType::VFS: return "[VFS] "+message;
         default: return message;
     }
 }

@@ -7,6 +7,7 @@
 #include<iostream>
 #include <memory>
 #include "../scheduler/Scheduler.h"
+#include "VirtualFileSystem.h"
 
 using namespace std;
 
@@ -19,6 +20,7 @@ Kernel::Kernel() : initialized(false){
     logger = make_unique<Logger>();
     scheduler = make_unique<Scheduler>();
     dllLoader = make_unique<DllLoader>(*logger);
+    vfs = make_unique<VirtualFileSystem>(*logger);
 }
 
 Kernel::~Kernel(){
@@ -58,6 +60,12 @@ bool Kernel::initialize() {
     }
     logger->log(MessageType::BOOT, "System clock initialized");
     
+    if (!vfs->initialize()) {
+    logger->log(MessageType::ERRORS, "Failed to initialize VFS");
+        return false;
+    }
+    logger->log(MessageType::BOOT, "Virtual filesystem initialized");
+
     initialized = true;
     logger->log(MessageType::BOOT, "vOS ready!");
     return true;
