@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <memory>
 #include "Logger.h"
-
+#include <chrono>
 using namespace std;
 #ifdef _WIN32
     #include <windows.h>
@@ -32,23 +32,30 @@ struct DriverFunctions {
 
 class LoadedDriver {
 public:
-    std::string name;
-    std::string filePath;  
+    string name;
+    string filePath;  
     DllHandle handle;
     DriverFunctions functions;
     bool initialized;
+    chrono::steady_clock::time_point loadTime;
+    chrono::steady_clock::time_point initTime;
     
-    LoadedDriver(const std::string& n, const std::string& path, DllHandle h)
-        : name(n), filePath(path), handle(h), initialized(false) {}
+    LoadedDriver(const string& n, const string& path, DllHandle h)
+        : name(n), filePath(path), handle(h), initialized(false) {
+            loadTime = chrono::steady_clock::now();
+        }
 };
 
 class DllLoader {
 private:
-    std::unordered_map<std::string, std::unique_ptr<LoadedDriver>> loadedDrivers;
+    unordered_map<string, unique_ptr<LoadedDriver>> loadedDrivers;
     Logger& logger;
+
+    static constexpr int INIT_TIMEOUT_MS = 2000;
+    static constexpr int MAX_DRIVER_NAME_LENGTH = 32;
     
-    DllHandle loadLibrary(const std::string& path);
-    FunctionPtr getFunctionAddress(DllHandle handle, const std::string& functionName);
+    DllHandle loadLibrary(const string& path);
+    FunctionPtr getFunctionAddress(DllHandle handle, const string& functionName);
     void unloadLibrary(DllHandle handle);
     bool resolveFunctions(LoadedDriver& driver);
     bool validateDriver(const LoadedDriver& driver);
@@ -57,11 +64,11 @@ public:
     DllLoader(Logger& log);
     ~DllLoader();
     
-    bool loadDriver(const std::string& dllPath);
-    LoadedDriver* getDriver(const std::string& name);
-    std::vector<std::string> getLoadedDriverNames() const;
+    bool loadDriver(const string& dllPath);
+    LoadedDriver* getDriver(const string& name);
+    vector<string> getLoadedDriverNames() const;
     int getLoadedDriverCount() const;
-    int loadAllDriversFromDirectory(const std::string& directory);
+    int loadAllDriversFromDirectory(const string& directory);
     void unloadAllDrivers();
     void displayLoadedDrivers() const;
 };

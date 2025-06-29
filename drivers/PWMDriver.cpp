@@ -1,7 +1,7 @@
 #include "DriverInterface.h"
 #include "DriverTypes.h"
 #include <iostream>
-
+using namespace std;
 static bool initialized = false;
 static DriverState currentState = DRIVER_STATE_UNINITIALIZED;
 
@@ -13,10 +13,10 @@ extern "C" {
     bool driverInit() {
         if (initialized) return true;
         
-        std::cout << "[PWM] Initializing PWM hardware" << std::endl;
-        std::cout << "[PWM] Configuring 16 PWM channels" << std::endl;
-        std::cout << "[PWM] Setting base frequency: 1kHz" << std::endl;
-        std::cout << "[PWM] Setting 12-bit resolution" << std::endl;
+        cout << "[PWM] Initializing PWM hardware" << endl;
+        cout << "[PWM] Configuring 16 PWM channels" << endl;
+        cout << "[PWM] Setting base frequency: 1kHz" << endl;
+        cout << "[PWM] Setting 12-bit resolution" << endl;
         
         initialized = true;
         currentState = DRIVER_STATE_INITIALIZED;
@@ -25,8 +25,8 @@ extern "C" {
 
     void driverCleanup() {
         if (initialized) {
-            std::cout << "[PWM] Cleaning up PWM resources" << std::endl;
-            std::cout << "[PWM] Stopping all PWM outputs" << std::endl;
+            cout << "[PWM] Cleaning up PWM resources" << endl;
+            cout << "[PWM] Stopping all PWM outputs" << endl;
             initialized = false;
             currentState = DRIVER_STATE_UNINITIALIZED;
         }
@@ -50,7 +50,7 @@ extern "C" {
 
     DriverStatus driverRead(void* buffer, size_t size) {
         if (!initialized) return DRIVER_STATUS_NOT_READY;
-        std::cout << "[PWM] Reading current duty cycle values" << std::endl;
+        cout << "[PWM] Reading current duty cycle values" << endl;
         return DRIVER_STATUS_SUCCESS;
     }
 
@@ -58,10 +58,10 @@ extern "C" {
         if (!initialized) return DRIVER_STATUS_NOT_READY;
         
         if (size == 2) {
-            std::cout << "[PWM] Setting duty cycle for single channel" << std::endl;
+            cout << "[PWM] Setting duty cycle for single channel" << endl;
         } else {
-            std::cout << "[PWM] Setting duty cycles for " << (size / 2) 
-                      << " channels" << std::endl;
+            cout << "[PWM] Setting duty cycles for " << (size / 2) 
+                      << " channels" << endl;
         }
         return DRIVER_STATUS_SUCCESS;
     }
@@ -71,17 +71,17 @@ extern "C" {
         
         switch (parameter) {
             case 1:
-                std::cout << "[PWM] Setting frequency: " << value << " Hz" << std::endl;
+                cout << "[PWM] Setting frequency: " << value << " Hz" << endl;
                 break;
             case 2:
-                std::cout << "[PWM] Setting duty cycle: " << value << "%" << std::endl;
+                cout << "[PWM] Setting duty cycle: " << value << "%" << endl;
                 break;
             case 3:
-                std::cout << "[PWM] Channel " << value << " control" << std::endl;
+                cout << "[PWM] Channel " << value << " control" << endl;
                 break;
             default:
-                std::cout << "[PWM] Configuring parameter " << parameter 
-                          << " = " << value << std::endl;
+                cout << "[PWM] Configuring parameter " << parameter 
+                          << " = " << value << endl;
                 break;
         }
         return DRIVER_STATUS_SUCCESS;

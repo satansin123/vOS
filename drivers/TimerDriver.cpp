@@ -1,7 +1,7 @@
 #include "DriverInterface.h"
 #include "DriverTypes.h"
 #include <iostream>
-
+using namespace std;
 static bool initialized = false;
 static DriverState currentState = DRIVER_STATE_UNINITIALIZED;
 
@@ -13,10 +13,10 @@ extern "C" {
     bool driverInit() {
         if (initialized) return true;
         
-        std::cout << "[TIMER] Initializing Timer hardware" << std::endl;
-        std::cout << "[TIMER] Setting base frequency: 1MHz" << std::endl;
-        std::cout << "[TIMER] Configuring 32-bit timer mode" << std::endl;
-        std::cout << "[TIMER] Enabling overflow interrupt" << std::endl;
+        cout << "[TIMER] Initializing Timer hardware" << endl;
+        cout << "[TIMER] Setting base frequency: 1MHz" << endl;
+        cout << "[TIMER] Configuring 32-bit timer mode" << endl;
+        cout << "[TIMER] Enabling overflow interrupt" << endl;
         
         initialized = true;
         currentState = DRIVER_STATE_INITIALIZED;
@@ -25,9 +25,9 @@ extern "C" {
 
     void driverCleanup() {
         if (initialized) {
-            std::cout << "[TIMER] Cleaning up Timer resources" << std::endl;
-            std::cout << "[TIMER] Stopping timer" << std::endl;
-            std::cout << "[TIMER] Disabling interrupts" << std::endl;
+            cout << "[TIMER] Cleaning up Timer resources" << endl;
+            cout << "[TIMER] Stopping timer" << endl;
+            cout << "[TIMER] Disabling interrupts" << endl;
             initialized = false;
             currentState = DRIVER_STATE_UNINITIALIZED;
         }
@@ -51,13 +51,13 @@ extern "C" {
 
     DriverStatus driverRead(void* buffer, size_t size) {
         if (!initialized) return DRIVER_STATUS_NOT_READY;
-        std::cout << "[TIMER] Reading timer counter value" << std::endl;
+        cout << "[TIMER] Reading timer counter value" << endl;
         return DRIVER_STATUS_SUCCESS;
     }
 
     DriverStatus driverWrite(const void* buffer, size_t size) {
         if (!initialized) return DRIVER_STATUS_NOT_READY;
-        std::cout << "[TIMER] Setting timer compare value" << std::endl;
+        cout << "[TIMER] Setting timer compare value" << endl;
         return DRIVER_STATUS_SUCCESS;
     }
 
@@ -66,18 +66,18 @@ extern "C" {
         
         switch (parameter) {
             case 1:
-                std::cout << "[TIMER] Setting period: " << value 
-                          << " microseconds" << std::endl;
+                cout << "[TIMER] Setting period: " << value 
+                          << " microseconds" << endl;
                 break;
             case 2:
-                std::cout << "[TIMER] Setting prescaler: " << value << std::endl;
+                cout << "[TIMER] Setting prescaler: " << value << endl;
                 break;
             case 3:
-                std::cout << "[TIMER] Setting mode: " << value << std::endl;
+                cout << "[TIMER] Setting mode: " << value << endl;
                 break;
             default:
-                std::cout << "[TIMER] Configuring parameter " << parameter 
-                          << " = " << value << std::endl;
+                cout << "[TIMER] Configuring parameter " << parameter 
+                          << " = " << value << endl;
                 break;
         }
         return DRIVER_STATUS_SUCCESS;

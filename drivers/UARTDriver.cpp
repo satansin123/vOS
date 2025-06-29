@@ -1,7 +1,7 @@
 #include "DriverInterface.h"
 #include "DriverTypes.h"
 #include <iostream>
-
+using namespace std;
 static bool initialized = false;
 static DriverState currentState = DRIVER_STATE_UNINITIALIZED;
 
@@ -13,9 +13,9 @@ extern "C" {
     bool driverInit() {
         if (initialized) return true;
         
-        std::cout << "[UART] Initializing UART hardware" << std::endl;
-        std::cout << "[UART] Setting baud rate: 115200" << std::endl;
-        std::cout << "[UART] Configuring 8N1 format" << std::endl;
+        cout << "[UART] Initializing UART hardware" << endl;
+        cout << "[UART] Setting baud rate: 115200" << endl;
+        cout << "[UART] Configuring 8N1 format" << endl;
         
         initialized = true;
         currentState = DRIVER_STATE_INITIALIZED;
@@ -24,7 +24,7 @@ extern "C" {
 
     void driverCleanup() {
         if (initialized) {
-            std::cout << "[UART] Cleaning up UART resources" << std::endl;
+            cout << "[UART] Cleaning up UART resources" << endl;
             initialized = false;
             currentState = DRIVER_STATE_UNINITIALIZED;
         }
@@ -48,20 +48,20 @@ extern "C" {
 
     DriverStatus driverRead(void* buffer, size_t size) {
         if (!initialized) return DRIVER_STATUS_NOT_READY;
-        std::cout << "[UART] Reading " << size << " bytes" << std::endl;
+        cout << "[UART] Reading " << size << " bytes" << endl;
         return DRIVER_STATUS_SUCCESS;
     }
 
     DriverStatus driverWrite(const void* buffer, size_t size) {
         if (!initialized) return DRIVER_STATUS_NOT_READY;
-        std::cout << "[UART] Writing " << size << " bytes" << std::endl;
+        cout << "[UART] Writing " << size << " bytes" << endl;
         return DRIVER_STATUS_SUCCESS;
     }
 
     DriverStatus driverConfigure(int parameter, int value) {
         if (!initialized) return DRIVER_STATUS_NOT_READY;
-        std::cout << "[UART] Configuring parameter " << parameter 
-                  << " to value " << value << std::endl;
+        cout << "[UART] Configuring parameter " << parameter 
+                  << " to value " << value << endl;
         return DRIVER_STATUS_SUCCESS;
     }
 }

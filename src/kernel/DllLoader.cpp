@@ -55,7 +55,7 @@ bool DllLoader::loadDriver(const string& dllPath) {
         return false;
     }
 
-    string fileName = std::filesystem::path(dllPath).stem().string();
+    string fileName = filesystem::path(dllPath).stem().string();
     auto driver = make_unique<LoadedDriver>(fileName, dllPath, handle);
 
     if (!resolveFunctions(*driver)) {
@@ -145,7 +145,7 @@ bool DllLoader::validateDriver(const LoadedDriver& driver) {
         return false;
     }
 
-    logger.log(MessageType::DLL_LOADER, "Driver validation passed: " + std::string(name) + " v" + std::string(version));
+    logger.log(MessageType::DLL_LOADER, "Driver validation passed: " + string(name) + " v" + string(version));
     return true;
 }
 
@@ -154,23 +154,23 @@ LoadedDriver* DllLoader::getDriver(const string& name) {
     return (it != loadedDrivers.end()) ? it->second.get() : nullptr;
 }
 
-int DllLoader::loadAllDriversFromDirectory(const std::string& directory) {
+int DllLoader::loadAllDriversFromDirectory(const string& directory) {
     logger.log(MessageType::HEADER, "Bulk Driver Loading");
     logger.log(MessageType::DLL_LOADER, "[DLL_LOADER] Scanning directory: " + directory);
 
-    if (!std::filesystem::exists(directory)) {
+    if (!filesystem::exists(directory)) {
         logger.log(MessageType::DLL_LOADER, "Directory not found: " + directory);
         return 0;
     }
 
     int successCount = 0;
     int totalCount = 0;
-    auto startTime = std::chrono::steady_clock::now();
+    auto startTime = chrono::steady_clock::now();
 
     try {
-        for (const auto& entry : std::filesystem::directory_iterator(directory)) {
+        for (const auto& entry : filesystem::directory_iterator(directory)) {
             if (entry.is_regular_file()) {
-                std::string extension = entry.path().extension().string();
+                string extension = entry.path().extension().string();
                 
 #ifdef _WIN32
                 if (extension == ".dll") {
@@ -178,7 +178,7 @@ int DllLoader::loadAllDriversFromDirectory(const std::string& directory) {
                 if (extension == ".so") {
 #endif
                     totalCount++;
-                    std::string filepath = entry.path().string();
+                    string filepath = entry.path().string();
                     logger.log(MessageType::DLL_LOADER, "Attempting to load: " + entry.path().filename().string());
                     
                     if (loadDriver(filepath)) {
@@ -190,18 +190,18 @@ int DllLoader::loadAllDriversFromDirectory(const std::string& directory) {
                 }
             }
         }
-    } catch (const std::exception& e) {
-        logger.log(MessageType::DLL_LOADER, "Directory scan error: " + std::string(e.what()));
+    } catch (const exception& e) {
+        logger.log(MessageType::DLL_LOADER, "Directory scan error: " + string(e.what()));
     }
 
-    auto endTime = std::chrono::steady_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+    auto endTime = chrono::steady_clock::now();
+    auto duration = chrono::duration_cast<chrono::milliseconds>(endTime - startTime);
 
     logger.log(MessageType::HEADER, "Bulk Loading Summary");
-    logger.log(MessageType::STATUS, "Total DLLs found: " + std::to_string(totalCount));
-    logger.log(MessageType::STATUS, "Successfully loaded: " + std::to_string(successCount));
-    logger.log(MessageType::STATUS, "Failed to load: " + std::to_string(totalCount - successCount));
-    logger.log(MessageType::STATUS, "Loading time: " + std::to_string(duration.count()) + "ms");
+    logger.log(MessageType::STATUS, "Total DLLs found: " + to_string(totalCount));
+    logger.log(MessageType::STATUS, "Successfully loaded: " + to_string(successCount));
+    logger.log(MessageType::STATUS, "Failed to load: " + to_string(totalCount - successCount));
+    logger.log(MessageType::STATUS, "Loading time: " + to_string(duration.count()) + "ms");
 
     return successCount;
 }
@@ -233,21 +233,21 @@ void DllLoader::displayLoadedDrivers() const {
             reinterpret_cast<void*>(driver->functions.driverGetCapabilities)
         );
 
-        std::string version = versionFunc();
+        string version = versionFunc();
         int type = typeFunc();
         int capabilities = capFunc();
 
         logger.log(MessageType::STATUS, "Driver: " + name);
         logger.log(MessageType::STATUS, "  Version: " + version);
-        logger.log(MessageType::STATUS, "  Type: " + std::to_string(type));
+        logger.log(MessageType::STATUS, "  Type: " + to_string(type));
         logger.log(MessageType::STATUS, "  File: " + driver->filePath);
-        logger.log(MessageType::STATUS, "  Capabilities: 0x" + std::to_string(capabilities));
-        logger.log(MessageType::STATUS, "  Initialized: " + std::string(driver->initialized ? "Yes" : "No"));
+        logger.log(MessageType::STATUS, "  Capabilities: 0x" + to_string(capabilities));
+        logger.log(MessageType::STATUS, "  Initialized: " + string(driver->initialized ? "Yes" : "No"));
     }
 }
 
-std::vector<std::string> DllLoader::getLoadedDriverNames() const {
-    std::vector<std::string> names;
+vector<string> DllLoader::getLoadedDriverNames() const {
+    vector<string> names;
     for (const auto& driverPair : loadedDrivers) {
         names.push_back(driverPair.first);
     }

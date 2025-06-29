@@ -1,7 +1,7 @@
 #include "DriverInterface.h"
 #include "DriverTypes.h"
 #include <iostream>
-
+using namespace std;
 static bool initialized = false;
 static DriverState currentState = DRIVER_STATE_UNINITIALIZED;
 
@@ -13,10 +13,10 @@ extern "C" {
     bool driverInit() {
         if (initialized) return true;
         
-        std::cout << "[ADC] Initializing ADC hardware" << std::endl;
-        std::cout << "[ADC] Setting resolution: 12-bit" << std::endl;
-        std::cout << "[ADC] Configuring 8 input channels" << std::endl;
-        std::cout << "[ADC] Setting reference voltage: 3.3V" << std::endl;
+        cout << "[ADC] Initializing ADC hardware" << endl;
+        cout << "[ADC] Setting resolution: 12-bit" << endl;
+        cout << "[ADC] Configuring 8 input channels" << endl;
+        cout << "[ADC] Setting reference voltage: 3.3V" << endl;
         
         initialized = true;
         currentState = DRIVER_STATE_INITIALIZED;
@@ -25,8 +25,8 @@ extern "C" {
 
     void driverCleanup() {
         if (initialized) {
-            std::cout << "[ADC] Cleaning up ADC resources" << std::endl;
-            std::cout << "[ADC] Powering down ADC" << std::endl;
+            cout << "[ADC] Cleaning up ADC resources" << endl;
+            cout << "[ADC] Powering down ADC" << endl;
             initialized = false;
             currentState = DRIVER_STATE_UNINITIALIZED;
         }
@@ -52,16 +52,16 @@ extern "C" {
         if (!initialized) return DRIVER_STATUS_NOT_READY;
         
         if (size == 2) {
-            std::cout << "[ADC] Reading single channel (12-bit value)" << std::endl;
+            cout << "[ADC] Reading single channel (12-bit value)" << endl;
         } else {
-            std::cout << "[ADC] Reading " << (size / 2) << " channels" << std::endl;
+            cout << "[ADC] Reading " << (size / 2) << " channels" << endl;
         }
         return DRIVER_STATUS_SUCCESS;
     }
 
     DriverStatus driverWrite(const void* buffer, size_t size) {
         if (!initialized) return DRIVER_STATUS_NOT_READY;
-        std::cout << "[ADC] Setting calibration data" << std::endl;
+        cout << "[ADC] Setting calibration data" << endl;
         return DRIVER_STATUS_SUCCESS;
     }
 
@@ -70,17 +70,17 @@ extern "C" {
         
         switch (parameter) {
             case 1:
-                std::cout << "[ADC] Selecting channel: " << value << std::endl;
+                cout << "[ADC] Selecting channel: " << value << endl;
                 break;
             case 2:
-                std::cout << "[ADC] Setting sampling rate: " << value << " Hz" << std::endl;
+                cout << "[ADC] Setting sampling rate: " << value << " Hz" << endl;
                 break;
             case 3:
-                std::cout << "[ADC] Setting reference: " << value << " mV" << std::endl;
+                cout << "[ADC] Setting reference: " << value << " mV" << endl;
                 break;
             default:
-                std::cout << "[ADC] Configuring parameter " << parameter 
-                          << " = " << value << std::endl;
+                cout << "[ADC] Configuring parameter " << parameter 
+                          << " = " << value << endl;
                 break;
         }
         return DRIVER_STATUS_SUCCESS;

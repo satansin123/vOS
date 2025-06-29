@@ -1,7 +1,7 @@
 #include "DriverInterface.h"
 #include "DriverTypes.h"
 #include <iostream>
-
+using namespace std;
 static bool initialized = false;
 static DriverState currentState = DRIVER_STATE_UNINITIALIZED;
 
@@ -13,9 +13,9 @@ extern "C" {
     bool driverInit() {
         if (initialized) return true;
         
-        std::cout << "[I2C] Initializing I2C hardware" << std::endl;
-        std::cout << "[I2C] Setting clock speed: 400kHz" << std::endl;
-        std::cout << "[I2C] Configuring 7-bit addressing mode" << std::endl;
+        cout << "[I2C] Initializing I2C hardware" << endl;
+        cout << "[I2C] Setting clock speed: 400kHz" << endl;
+        cout << "[I2C] Configuring 7-bit addressing mode" << endl;
         
         initialized = true;
         currentState = DRIVER_STATE_INITIALIZED;
@@ -24,8 +24,8 @@ extern "C" {
 
     void driverCleanup() {
         if (initialized) {
-            std::cout << "[I2C] Cleaning up I2C resources" << std::endl;
-            std::cout << "[I2C] Releasing bus control" << std::endl;
+            cout << "[I2C] Cleaning up I2C resources" << endl;
+            cout << "[I2C] Releasing bus control" << endl;
             initialized = false;
             currentState = DRIVER_STATE_UNINITIALIZED;
         }
@@ -49,20 +49,20 @@ extern "C" {
 
     DriverStatus driverRead(void* buffer, size_t size) {
         if (!initialized) return DRIVER_STATUS_NOT_READY;
-        std::cout << "[I2C] Reading " << size << " bytes from slave" << std::endl;
+        cout << "[I2C] Reading " << size << " bytes from slave" << endl;
         return DRIVER_STATUS_SUCCESS;
     }
 
     DriverStatus driverWrite(const void* buffer, size_t size) {
         if (!initialized) return DRIVER_STATUS_NOT_READY;
-        std::cout << "[I2C] Writing " << size << " bytes to slave" << std::endl;
+        cout << "[I2C] Writing " << size << " bytes to slave" << endl;
         return DRIVER_STATUS_SUCCESS;
     }
 
     DriverStatus driverConfigure(int parameter, int value) {
         if (!initialized) return DRIVER_STATUS_NOT_READY;
-        std::cout << "[I2C] Configuring parameter " << parameter 
-                  << " = " << value << std::endl;
+        cout << "[I2C] Configuring parameter " << parameter 
+                  << " = " << value << endl;
         return DRIVER_STATUS_SUCCESS;
     }
 }

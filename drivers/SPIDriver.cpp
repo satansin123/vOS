@@ -1,7 +1,7 @@
 #include "DriverInterface.h"
 #include "DriverTypes.h"
 #include <iostream>
-
+using namespace std;
 static bool initialized = false;
 static DriverState currentState = DRIVER_STATE_UNINITIALIZED;
 
@@ -13,10 +13,10 @@ extern "C" {
     bool driverInit() {
         if (initialized) return true;
         
-        std::cout << "[SPI] Initializing SPI hardware" << std::endl;
-        std::cout << "[SPI] Setting clock frequency: 1MHz" << std::endl;
-        std::cout << "[SPI] Configuring SPI Mode 0 (CPOL=0, CPHA=0)" << std::endl;
-        std::cout << "[SPI] Setting 8-bit data frame" << std::endl;
+        cout << "[SPI] Initializing SPI hardware" << endl;
+        cout << "[SPI] Setting clock frequency: 1MHz" << endl;
+        cout << "[SPI] Configuring SPI Mode 0 (CPOL=0, CPHA=0)" << endl;
+        cout << "[SPI] Setting 8-bit data frame" << endl;
         
         initialized = true;
         currentState = DRIVER_STATE_INITIALIZED;
@@ -25,8 +25,8 @@ extern "C" {
 
     void driverCleanup() {
         if (initialized) {
-            std::cout << "[SPI] Cleaning up SPI resources" << std::endl;
-            std::cout << "[SPI] Disabling SPI interface" << std::endl;
+            cout << "[SPI] Cleaning up SPI resources" << endl;
+            cout << "[SPI] Disabling SPI interface" << endl;
             initialized = false;
             currentState = DRIVER_STATE_UNINITIALIZED;
         }
@@ -50,13 +50,13 @@ extern "C" {
 
     DriverStatus driverRead(void* buffer, size_t size) {
         if (!initialized) return DRIVER_STATUS_NOT_READY;
-        std::cout << "[SPI] Full-duplex read " << size << " bytes" << std::endl;
+        cout << "[SPI] Full-duplex read " << size << " bytes" << endl;
         return DRIVER_STATUS_SUCCESS;
     }
 
     DriverStatus driverWrite(const void* buffer, size_t size) {
         if (!initialized) return DRIVER_STATUS_NOT_READY;
-        std::cout << "[SPI] Full-duplex write " << size << " bytes" << std::endl;
+        cout << "[SPI] Full-duplex write " << size << " bytes" << endl;
         return DRIVER_STATUS_SUCCESS;
     }
 
@@ -65,13 +65,13 @@ extern "C" {
         
         switch (parameter) {
             case 1:
-                std::cout << "[SPI] Setting clock frequency: " << value << " Hz" << std::endl;
+                cout << "[SPI] Setting clock frequency: " << value << " Hz" << endl;
                 break;
             case 2:
-                std::cout << "[SPI] Setting SPI mode: " << value << std::endl;
+                cout << "[SPI] Setting SPI mode: " << value << endl;
                 break;
             default:
-                std::cout << "[SPI] Unknown parameter " << parameter << std::endl;
+                cout << "[SPI] Unknown parameter " << parameter << endl;
                 break;
         }
         return DRIVER_STATUS_SUCCESS;

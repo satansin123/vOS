@@ -18,7 +18,7 @@ Kernel::Kernel() : initialized(false){
     systemClock = make_unique<Clock>();
     logger = make_unique<Logger>();
     scheduler = make_unique<Scheduler>();
-    dllLoader = std::make_unique<DllLoader>(*logger);
+    dllLoader = make_unique<DllLoader>(*logger);
 }
 
 Kernel::~Kernel(){
