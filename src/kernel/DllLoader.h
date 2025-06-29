@@ -6,6 +6,8 @@
 #include <memory>
 #include "Logger.h"
 #include <chrono>
+#include <future>
+#include<functional>
 using namespace std;
 #ifdef _WIN32
     #include <windows.h>
@@ -59,6 +61,11 @@ private:
     void unloadLibrary(DllHandle handle);
     bool resolveFunctions(LoadedDriver& driver);
     bool validateDriver(const LoadedDriver& driver);
+
+    bool initializeAndRegisterDriver(LoadedDriver& driver);
+    bool callDriverInitWithTimeout(function<bool()> initFunc, int timeoutMs);
+    void registerDriverWithKernel(const string& driverName);
+    void cleanupFailedDriver(unique_ptr<LoadedDriver> driver);
 
 public:
     DllLoader(Logger& log);

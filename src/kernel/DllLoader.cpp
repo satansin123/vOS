@@ -1,8 +1,11 @@
 #include "DllLoader.h"
 #include "Kernel.h"
 #include "Logger.h"
+#include "DeviceRegistry.h"
 #include <cstring>
 #include <chrono>
+#include <exception>
+#include <future>
 #include<memory>
 #include <libloaderapi.h>
 #include <memory>
@@ -10,7 +13,7 @@
 #include <string>
 #include <vector>
 #include <filesystem>  
-
+class DeviceRegistry;
 using namespace std;
 
 DllLoader::DllLoader(Logger& log) : logger(log) {
@@ -70,7 +73,6 @@ bool DllLoader::loadDriver(const string& dllPath) {
         return false;
     }
 
-    // Fixed: Cast to void* first, then to target function type
     typedef const char*(*DriverNameFunc)();
     DriverNameFunc nameFunc = reinterpret_cast<DriverNameFunc>(
         reinterpret_cast<void*>(driver->functions.driverName)
@@ -83,6 +85,18 @@ bool DllLoader::loadDriver(const string& dllPath) {
         unloadLibrary(handle);
         return false;
     }
+    try{
+        if (!initializeAndRegisterDriver(*driver)) {
+            logger.log(MessageType::DLL_LOADER, "Driver Initialisation failed: "+ actualName);
+            cleanupFailedDriver(std::move(driver));
+            return false;
+        }
+    }
+    catch(const exception& ex){
+        logger.log(MessageType::DLL_LOADER, "Exception during initialization: " + string(ex.what()));
+        cleanupFailedDriver(std::move(driver));
+        return false;
+    }
 
     loadedDrivers[actualName] = std::move(driver);
 
@@ -91,6 +105,67 @@ bool DllLoader::loadDriver(const string& dllPath) {
     logger.log(MessageType::DLL_LOADER, "Driver loaded successfully: " + actualName + " (" + to_string(duration.count()) + "ms");
 
     return true;
+}
+
+bool DllLoader::initializeAndRegisterDriver(LoadedDriver& driver){
+    typedef const char*(*DriverNameFunc)();
+    DriverNameFunc nameFunc = reinterpret_cast<DriverNameFunc>(reinterpret_cast<void*>(driver.functions.driverName));
+    string driverName = nameFunc();
+    logger.log(MessageType::INIT, "Calling driverInit() for: "+ driverName );
+    
+    typedef bool(*DriverInitFunc)();
+    DriverInitFunc initFunc = reinterpret_cast<DriverInitFunc>(reinterpret_cast<void*>(driver.functions.driverInit));
+    bool initResult = callDriverInitWithTimeout(initFunc, INIT_TIMEOUT_MS);
+
+    if (!initResult) {
+        logger.log(MessageType::INIT, "Driver initialization failed: " + driverName);
+        return false;
+    }
+    driver.initTime = chrono::steady_clock::now();
+    driver.initialized = true;
+    logger.log(MessageType::INIT, "Driver reports name: \"" + driverName + "\"");
+
+    logger.log(MessageType::INIT, "Registering device with kernel: " + driverName);
+    registerDriverWithKernel(driverName);
+
+    logger.log(MessageType::INIT, "Driver " + driverName + " initialization complete");
+
+    return true;
+}
+
+bool DllLoader::callDriverInitWithTimeout(function<bool()> initFunc, int timeoutMs){
+    future<bool> future = async(launch::async, [initFunc](){
+        try{
+            return initFunc();
+        }
+        catch(...){
+            return false;
+        }
+    });
+
+    if (future.wait_for(chrono::milliseconds(timeoutMs)) == future_status::timeout) {
+        logger.log(MessageType::INIT, "Driver init timeout: "+ to_string(timeoutMs));
+        return false;
+    }
+    try {
+        return future.get();
+    } catch (...) {
+        logger.log(MessageType::INIT, "Exception during driver initialization");
+        return false;
+    }
+}
+
+void DllLoader::registerDriverWithKernel(const string& name){
+    auto& deviceRegistry = Kernel::getInstance().getDeviceRegistry();
+    deviceRegistry.registerDevice(name, "hardware device"); 
+}
+
+void DllLoader::cleanupFailedDriver(unique_ptr<LoadedDriver> driver){
+    if (driver) {
+        if (driver->handle) {
+            unloadLibrary(driver->handle);
+        }
+    }
 }
 
 bool DllLoader::resolveFunctions(LoadedDriver& driver) {
@@ -218,7 +293,6 @@ void DllLoader::displayLoadedDrivers() const {
         const string& name = driverPair.first;
         const unique_ptr<LoadedDriver>& driver = driverPair.second;
         
-        // Fixed: Cast to void* first, then to target function types
         typedef const char*(*DriverVersionFunc)();
         typedef int(*DriverTypeFunc)();
         typedef int(*DriverCapabilitiesFunc)();

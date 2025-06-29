@@ -17,7 +17,8 @@ enum class MessageType{
     SCHEDULER,
     TIMER,
     UART,
-    DLL_LOADER
+    DLL_LOADER,
+    INIT
 };
 class Logger{
     private:

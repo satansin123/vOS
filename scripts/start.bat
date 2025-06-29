@@ -19,9 +19,10 @@ for %%I in ("%PROJECT_ROOT%") do set "PROJECT_NAME=%%~nxI"
 
 echo.
 echo Running application...
-if exist "%BUILD_DIR%\bin\%PROJECT_NAME%.exe" (
-    "%BUILD_DIR%\bin\%PROJECT_NAME%.exe" local
+cd "%BUILD_DIR%\bin"
+if exist "vOS.exe" (
+    "vOS.exe" local
 ) else (
-    echo Executable not found: %BUILD_DIR%\bin\%PROJECT_NAME%.exe
+    echo Executable not found: %BUILD_DIR%\bin\vOS.exe
     exit /b 1
 )
