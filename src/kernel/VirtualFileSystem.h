@@ -18,8 +18,9 @@ struct DeviceNode{
     LoadedDriver* driver;
     bool isOpen;
     chrono::steady_clock::time_point lastAccess;
+    int openCount;
     DeviceNode(const string& path, const string& name, LoadedDriver* drv):
-    devicePath(path), deviceName(name), driver(drv), isOpen(false){
+    devicePath(path), deviceName(name), driver(drv), isOpen(false), openCount(0){
         lastAccess = chrono::steady_clock::now();
     }
 };
@@ -29,6 +30,8 @@ class VirtualFileSystem{
         Logger& logger;
         unordered_map<string, unique_ptr<DeviceNode>> deviceNodes;
         string devRoot = "/dev";
+        mutable mutex vfsMutex;
+        bool initialized;
     public:
         explicit VirtualFileSystem(Logger& log);
         ~VirtualFileSystem();
@@ -51,6 +54,17 @@ class VirtualFileSystem{
 
         void displayDeviceTree() const;
         size_t getDeviceCount() const;
+        vector<string> getOpenDevices() const;
+        void displayVFSStatistics() const;
 
         string generateDevicePath(const string& driverName);
+        bool validateDevicePath(const string& devicePath) const;
+        void updateLastAccess(DeviceNode& node);
+
+        static constexpr int VFS_SUCCESS = 0;
+        static constexpr int VFS_ERROR_NOT_FOUND = -1;
+        static constexpr int VFS_ERROR_NOT_OPEN = -2;
+        static constexpr int VFS_ERROR_DRIVER_FAIL = -3;
+        static constexpr int VFS_ERROR_INVALID_PATH = -4;
+        static constexpr int VFS_ERROR_ALREADY_OPEN = -5;
 };

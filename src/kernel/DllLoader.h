@@ -6,7 +6,6 @@
 #include <memory>
 #include "Logger.h"
 #include <chrono>
-#include <future>
 #include<functional>
 using namespace std;
 #ifdef _WIN32

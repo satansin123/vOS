@@ -126,7 +126,7 @@ bool DllLoader::initializeAndRegisterDriver(LoadedDriver& driver){
     logger.log(MessageType::INIT, "Driver reports name: \"" + driverName + "\"");
 
     auto& vfs = Kernel::getInstance().getVfs();
-    if (!vfs.registerDevice(driverName, driver.())) {
+    if (!vfs.registerDevice(driverName, &driver)) {
         logger.log(MessageType::DLL_LOADER, "Failed to register device in VFS: " + driverName);
     }
 
