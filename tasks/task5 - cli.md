@@ -212,3 +212,5 @@ Task 'HeartbeatTask' resumed
 ---
 
 This completes Phase 5 of the Virtual Embedded OS project, providing a comprehensive command-line interface that enables system administration, device interaction, and dynamic task management through an intuitive shell environment.
+
+heres what i want to make part from these, since i am using windows, once i run the code, the ticks in that terminal should start showing along with some logs, then in other terminal i want to connect to this terminal where cli will be shown and we can work on it

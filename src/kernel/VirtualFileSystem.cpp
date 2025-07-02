@@ -1,14 +1,15 @@
 #include "VirtualFileSystem.h"
-#include "DllLoader.h"
+#include "Device.h"
 #include "Logger.h"
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
+#include <cstring>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <vector>
-
+#include "HardwareDevice.h"
 using namespace std;
 
 VirtualFileSystem::VirtualFileSystem(Logger& log) : logger(log), initialized(false) {
@@ -39,8 +40,6 @@ void VirtualFileSystem::cleanup() {
     }
     
     logger.log(MessageType::VFS, "Cleaning up virtual filesystem...");
-    
-    // Close all open devices
     for (auto& pair : deviceNodes) {
         if (pair.second->isOpen) {
             logger.log(MessageType::VFS, "Force closing device: " + pair.first);
@@ -54,22 +53,47 @@ void VirtualFileSystem::cleanup() {
     
     logger.log(MessageType::VFS, "Virtual filesystem cleanup complete");
 }
-
-bool VirtualFileSystem::registerDevice(const string& driverName, LoadedDriver* driver){
-    lock_guard<mutex> lock(vfsMutex);
+bool VirtualFileSystem::registerDevice(const std::string& driverName, LoadedDriver* driver) {
     if (!driver) {
-        logger.log(MessageType::VFS, "Cannot register null driver: "+driverName);
+        logger.log(MessageType::VFS, "Cannot register null driver: " + driverName);
         return false;
     }
-    string devicePath = generateDevicePath(driverName);
 
-    if (deviceExists(devicePath)) {
-        logger.log(MessageType::VFS, "display path already exists: " + devicePath);
+    std::string devicePath = generateDevicePath(driverName);
+
+    auto hardwareDevice = std::make_unique<HardwareDevice>(driver, driverName, "Hardware");
+
+    return registerDevice(devicePath, std::move(hardwareDevice));
+}
+
+bool VirtualFileSystem::registerDevice(const std::string& devicePath, std::unique_ptr<Device> device) {
+    lock_guard<mutex> lock(vfsMutex);
+    
+    if (!device) {
+        logger.log(MessageType::VFS, "Cannot register null device: " + devicePath);
         return false;
     }
-    auto deviceNode = make_unique<DeviceNode>(devicePath, driverName, driver);
+    
+    if (!validateDevicePath(devicePath)) {
+        logger.log(MessageType::VFS, "Invalid device path: " + devicePath);
+        return false;
+    }
+    
+    if (deviceExists(devicePath)) {
+        logger.log(MessageType::VFS, "Device path already exists: " + devicePath);
+        return false;
+    }
+    
+    if (!device->initialise()) {
+        logger.log(MessageType::VFS, "Failed to initialize device: " + devicePath);
+        return false;
+    }
+    
+    string deviceName = device->getName();
+    auto deviceNode = make_unique<DeviceNode>(devicePath, deviceName, std::move(device));
     deviceNodes[devicePath] = std::move(deviceNode);
-    logger.log(MessageType::VFS, "Device registered: "+driverName);
+    
+    logger.log(MessageType::VFS, "Device registered: " + devicePath + " (" + deviceName + ")");
     return true;
 }
 bool VirtualFileSystem::unregisterDevice(const string& devicePath){
@@ -195,15 +219,87 @@ int VirtualFileSystem::readDevice(const string& devicePath, void* buffer, size_t
         logger.log(MessageType::VFS, "Device not open: "+devicePath);
         return -2;
     }
-    typedef int (*DriverReadFunc)(void*, size_t);
-    DriverReadFunc readFunc = reinterpret_cast<DriverReadFunc>(reinterpret_cast<void*>(node->driver->functions.driverRead));
-
-    logger.log(MessageType::VFS, "reading from " + devicePath + " (" + to_string(size) + " bytes)");
-    int result = readFunc(buffer, size);
+    string data = node->device->read();
+    if (data.empty()) {
+        return -3;
+    }
+    size_t toCopy = min(size-1, data.size());
+    memcpy(buffer, data.data(), toCopy);
+    static_cast<char*>(buffer)[toCopy] = '\0';
     updateLastAccess(*node);
-    return result == 0? static_cast<int>(size) : -3;
+    return static_cast<int>(toCopy);
 }
 
+bool VirtualFileSystem::writeToDevice(const string& devicepath, const string& data){
+    lock_guard<mutex> lock(vfsMutex);
+
+    if (!validateDevicePath(devicepath)) {
+        logger.log(MessageType::VFS, "Invalid device path: " + devicepath);
+        return false;
+    }
+    Device* device = findDevice(devicepath);
+    if (!device) {
+        logger.log(MessageType::VFS, "Device not found: " + devicepath);
+        return false;
+    }
+    if (!device->isReady()) {
+        logger.log(MessageType::VFS, "Device not ready: " + devicepath);
+        return false;
+    }
+    logger.log(MessageType::VFS, "Writing to " + devicepath + " (" + to_string(data.length()) + " bytes)");
+
+    bool result = device->write(data);
+    if (result) {
+        auto it = deviceNodes.find(devicepath);
+        if (it!= deviceNodes.find(devicepath)) {
+            updateLastAccess(*it->second);
+        }
+        logger.log(MessageType::VFS, "Write successful to " + devicepath);
+    } else {
+        logger.log(MessageType::VFS, "Write failed to " + devicepath);
+    
+    }
+    return result;
+}
+pair<string, bool> VirtualFileSystem::readFromDevice(const std::string& devicePath, bool blocking) {
+    lock_guard<mutex> lock(vfsMutex);
+    
+    if (!validateDevicePath(devicePath)) {
+        logger.log(MessageType::VFS, "Invalid device path: " + devicePath);
+        return make_pair("", false);
+    }
+    
+    Device* device = findDevice(devicePath);
+    if (!device) {
+        logger.log(MessageType::VFS, "Device not found: " + devicePath);
+        return make_pair("", false);
+    }
+    
+    if (!device->isReady()) {
+        logger.log(MessageType::VFS, "Device not ready: " + devicePath);
+        return make_pair("", false);
+    }
+    
+    logger.log(MessageType::VFS, "Reading from " + devicePath + 
+               " (mode: " + (blocking ? "blocking" : "non-blocking") + ")");
+    
+    string data = device->read();
+    bool success = !data.empty();
+    
+    if (success) {
+        // Update access time
+        auto it = deviceNodes.find(devicePath);
+        if (it != deviceNodes.end()) {
+            updateLastAccess(*it->second);
+        }
+        logger.log(MessageType::VFS, "Read successful from " + devicePath + 
+                   " (" + to_string(data.length()) + " bytes)");
+    } else {
+        logger.log(MessageType::VFS, "Read failed from " + devicePath);
+    }
+    
+    return make_pair(data, success);
+}
 int VirtualFileSystem::writeDevice(const string& driverPath, const void* buffer, size_t size){
     lock_guard<mutex> lock(vfsMutex);
     auto it = deviceNodes.find(driverPath);
@@ -214,12 +310,10 @@ int VirtualFileSystem::writeDevice(const string& driverPath, const void* buffer,
     if (!node->isOpen) {
         return -2;
     }
-    typedef int (*DriverWriteFunc)(const void*, size_t);
-    DriverWriteFunc writeFunc = reinterpret_cast<DriverWriteFunc>(reinterpret_cast<void*>(node->driver->functions.driverWrite));
-    logger.log(MessageType::VFS, "Writing to " + driverPath + " (" + std::to_string(size) + " bytes)");
-    int result = writeFunc(buffer, size);
+    string data(static_cast<const char*>(buffer), size);
+    bool result = node->device->write(data);
     updateLastAccess(*node);
-    return result == 0? static_cast<int>(size):-3;
+    return result ? static_cast<int>(size) : -3;
 }
 
 int VirtualFileSystem::configureDevice(const string& devicePath, int parameter, int value){
@@ -232,14 +326,15 @@ int VirtualFileSystem::configureDevice(const string& devicePath, int parameter, 
     }
 
     auto& node = it->second;
-    typedef int(*DriverConfigureFunc) (int, int);
-    DriverConfigureFunc configFunc = reinterpret_cast<DriverConfigureFunc>(reinterpret_cast<void*>(node->driver->functions.driverConfigure));
-
-    logger.log(MessageType::VFS, "Configuring " + devicePath + " (param=" + to_string(parameter) + ", value=" + to_string(value) + ")");
-    int result  = configFunc(parameter, value);
+    bool result = node->device->configure(parameter, value);
     updateLastAccess(*node);
 
-    return result==0? VFS_SUCCESS : VFS_ERROR_DRIVER_FAIL;
+    return result ? VFS_SUCCESS : VFS_ERROR_DRIVER_FAIL;
+}
+
+Device* VirtualFileSystem::findDevice(const std::string& devicePath) const {
+    auto it = deviceNodes.find(devicePath);
+    return (it != deviceNodes.end()) ? it->second->device.get() : nullptr;
 }
 
 vector<string> VirtualFileSystem::listDevice() const{

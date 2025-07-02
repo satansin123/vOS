@@ -7,16 +7,16 @@
 
 using namespace std;
 
-struct Device{
+struct DeviceInfo{
     string name;
     string type;
     bool active;
-    Device(const string& n, const string& t) :name(n) , type(t), active(true){}
+    DeviceInfo(const string& n, const string& t) :name(n) , type(t), active(true){}
 };
 
 class DeviceRegistry{
     private:
-        vector<Device> devices;
+        vector<DeviceInfo> devices;
         mutable mutex registryMutex;
         bool initialized;
 
@@ -31,5 +31,5 @@ class DeviceRegistry{
         void unregisterDevice(const string& name);
 
         size_t getDeviceCount() const;
-        vector<Device> getDevices() const;
+        vector<DeviceInfo> getDevices() const;
 };

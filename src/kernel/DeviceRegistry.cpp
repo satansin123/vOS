@@ -43,7 +43,7 @@ void DeviceRegistry::unregisterDevice(const string &name) {
   lock_guard<mutex> lock(registryMutex);
   devices.erase(
       remove_if(devices.begin(), devices.end(),
-                [&name](const Device &dev) { return dev.name == name; }),
+                [&name](const DeviceInfo &dev) { return dev.name == name; }),
       devices.end());
 }
 
@@ -52,7 +52,7 @@ size_t DeviceRegistry::getDeviceCount() const{
     return devices.size();
 }
 
-vector<Device> DeviceRegistry::getDevices() const {
+vector<DeviceInfo> DeviceRegistry::getDevices() const {
     lock_guard<mutex> lock(registryMutex);
     return devices;
 }
