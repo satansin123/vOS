@@ -3,6 +3,7 @@
 #include <cctype>
 #include <iterator>
 #include <mutex>
+#include <sstream>
 #include <string>
 #include <vector>
 #include<iostream>
@@ -58,4 +59,55 @@ void Shell::handleInput(const string& input){
     transform(cmd.begin(), cmd.end(), cmd.begin(), ::tolower);
 
     lock_guard<mutex> lock(shellMutex);
+
+    auto it = command.find(cmd);
+    if (it!= command.end()) {
+        it->second.second(args);
+    }
+    else{
+        printUnknownCommand(cmd);
+    }
+}
+
+vector<string> Shell::parseArguments(const string& line){
+    vector<string> args;
+    istringstream iss(line);
+    string arg;
+    bool inQuotes = false;
+    string current;
+
+    while (iss) {
+        char c = iss.get();
+        if (!iss) {
+            break;
+        }
+        if (c=='"') {
+            inQuotes = !inQuotes;
+            continue;
+        }
+        if (isspace(c) && !inQuotes) {
+            if (!current.empty()) {
+                args.push_back(current);
+                current.clear();
+            }
+        }
+        else{
+            current+=c;
+        }
+    }
+    if (!current.empty()) {
+        args.push_back(current);
+    }
+    return args;
+}
+
+void Shell::printUnknownCommand(const std::string& cmd) {
+    std::cout << "Error: Unknown command '" << cmd << "'\n";
+}
+
+void Shell::printHelp(const std::vector<std::string>&) {
+    std::cout << "Available commands:\n";
+    for (const auto& entry : command) {
+        std::cout << "  " << entry.first << " - " << entry.second.first << "\n";
+    }
 }
